@@ -1563,6 +1563,86 @@ function escH(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function escAttr(t){return escH(t).replace(/'/g,'&#39;');}
 function ts(){var t=new Date();return('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2);}
 
+/**
+ * מנוע חישוב חיווט - ENGCORE v14
+ * מבצע חילוץ מידות (L), ספירת חוטים וחישוב אורך כולל
+ */
+const HarnessAnalyzer = {
+    // 1. חילוץ ערכי מידות (למשל L1=500mm) מתוך הטקסט
+    extractDimensions: function(text) {
+        const dimensions = {};
+        // מחפש דפוסים של L ואחריו מספר (למשל L1 500 או L1=500)
+        const regex = /L(\d+)\s*[:=]?\s*(\d+)/gi;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+            dimensions[`L${match[1]}`] = parseFloat(match[2]);
+        }
+        return dimensions;
+    },
+
+    // 2. ספירת מופעי חוטים לפי סוג וצבע
+    countWireInstances: function(text) {
+        return {
+            black22: (text.match(/BLK\s*#22/gi) || []).length,
+            red22: (text.match(/RED\s*#22/gi) || []).length,
+            white22: (text.match(/WHT\s*#22/gi) || []).length,
+            shield: (text.match(/SHIELD/gi) || []).length
+        };
+    },
+
+    // 3. מנוע החישוב הסופי
+    runAnalysis: function(rawOCRText) {
+        const dims = this.extractDimensions(rawOCRText);
+        const counts = this.countWireInstances(rawOCRText);
+        
+        // הגדרת ברירת מחדל אם המידות לא נמצאו ב-OCR (לפי השרטוט שלך)
+        const defaultL = dims['L1'] || 1000; // אם לא נמצא, מניח 1 מטר כבסיס
+
+        const report = {
+            wireCounts: counts,
+            dimensionsFound: dims,
+            estimatedTotalLength: (counts.black22 + counts.red22 + counts.white22) * defaultL
+        };
+
+        this.updateUI(report);
+    },
+
+    // 4. הזרקת התוצאות לממשק
+    updateUI: function(data) {
+        const container = document.getElementById('summary-output');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div style="background: #f8f9fa; border-right: 4px solid #007bff; padding: 15px; margin-top: 10px;">
+                <h4 style="margin-top:0;">📊 סיכום ניתוח הנדסי (HarnessPro v4)</h4>
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td><strong>חוטים שחורים (#22):</strong></td><td>${data.wireCounts.black22} יח'</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td><strong>חוטים אדומים (#22):</strong></td><td>${data.wireCounts.red22} יח'</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td><strong>חוטים לבנים (#22):</strong></td><td>${data.wireCounts.white22} יח'</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td><strong>סיכוך (Shield):</strong></td><td>${data.wireCounts.shield} יח'</td>
+                    </tr>
+                </table>
+                <p style="margin-bottom:0; color: #d9534f;">
+                    <strong>אורך משוער לכלל החוטים:</strong> 
+                    ${(data.estimatedTotalLength / 1000).toFixed(2)} מטרים
+                </p>
+                <small>* מבוסס על אורך בסיס של ${data.dimensionsFound['L1'] || '1000'}mm</small>
+            </div>
+        `;
+    }
+};
+
+// פונקציית העזר שתפעיל את המנוע בסיום ה-OCR
+function onOCRComplete(fullText) {
+    HarnessAnalyzer.runAnalysis(fullText);
+}
 
 </script>
 </body>
