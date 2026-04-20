@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ENGCORE v14</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg:#f0f4f8;--surface:#ffffff;--surface2:#f8fafc;--border:#e2e8f0;--border2:#cbd5e1;
+  --txt:#0f172a;--txt2:#475569;--txt3:#94a3b8;
+  --cyan:#0ea5e9;--cyan2:#0284c7;--cyanL:#e0f2fe;--cyanLL:#f0f9ff;
+  --green:#10b981;--greenL:#d1fae5;--amber:#f59e0b;--amberL:#fef3c7;
+  --red:#ef4444;--redL:#fee2e2;--purple:#8b5cf6;--purpleL:#ede9fe;
+  --orange:#f97316;--orangeL:#fff7ed;
+  --shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.04);
+  --shadow2:0 4px 24px rgba(14,165,233,0.12);--radius:12px;--radius-sm:8px;
+  --sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;height:100dvh;background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;overflow:hidden;direction:rtl;font-size:15px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* TOPBAR */
+#topbar{position:fixed;top:0;right:0;left:0;height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:200;box-shadow:0 1px 0 var(--border)}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;color:var(--cyan2);display:flex;align-items:center;gap:9px;letter-spacing:-0.02em}
+.logo-mark{width:28px;height:28px;background:var(--cyan2);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);box-shadow:0 0 12px rgba(14,165,233,0.35);flex-shrink:0}
+.status-pills{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:0.65rem;font-weight:600;font-family:'DM Mono',monospace;border:1px solid var(--border);background:var(--surface2);color:var(--txt3)}
+.pill.ok{background:var(--greenL);color:var(--green);border-color:#6ee7b7}
+.pill.off{background:var(--surface2);color:var(--txt3)}
+.pill.spin-p{background:var(--amberL);color:var(--amber);border-color:#fcd34d}
+.pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.pill.ok .pill-dot{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* BOTTOM NAV */
+#bnav{position:fixed;bottom:0;right:0;left:0;height:calc(60px + var(--sb));background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:8px;z-index:200}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--txt3);font-size:0.6rem;font-weight:600;cursor:pointer;border:none;background:none;position:relative;transition:color 0.15s}
+.nb.on{color:var(--cyan2)}
+.nb svg{width:22px;height:22px;stroke-width:1.7}
+.nb-pip{position:absolute;top:2px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:var(--red);display:none;border:1.5px solid var(--surface)}
+.nb-pip.show{display:block}
+
+/* PAGES */
+#app{position:fixed;top:56px;bottom:calc(60px + var(--sb));right:0;left:0;overflow:hidden}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;padding:16px;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
+.page.on{display:flex}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.card-cyan{border-color:#bae6fd;background:var(--cyanLL)}
+.card-green{border-color:#6ee7b7;background:#f0fdf4}
+.card-amber{border-color:#fcd34d;background:#fffbeb}
+.card-red{border-color:#fca5a5;background:#fff5f5}
+.card-orange{border-color:#fdba74;background:var(--orangeL)}
+.card-purple{border-color:#c4b5fd;background:var(--purpleL)}
+.section-label{font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* FORM */
+.lbl{display:block;font-size:0.78rem;font-weight:600;color:var(--txt2);margin-bottom:5px}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:0.9rem;padding:10px 13px;border-radius:var(--radius-sm);outline:none;-webkit-appearance:none;transition:border-color 0.15s,box-shadow 0.15s}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(14,165,233,0.12)}
+.field{margin-bottom:10px}
+select option{background:#fff}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.9rem;cursor:pointer;border:none;transition:all 0.15s;width:100%;margin-bottom:8px;min-height:46px;touch-action:manipulation}
+.btn:active{transform:scale(0.97)}
+.btn:disabled{opacity:0.4;pointer-events:none}
+.btn svg{width:16px;height:16px;flex-shrink:0}
+.btn-sm{padding:7px 13px;font-size:0.78rem;min-height:34px;width:auto;margin-bottom:0}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap}
+.bp{background:var(--cyan2);color:#fff;box-shadow:0 2px 8px rgba(2,132,199,0.25)}
+.bp:hover{background:var(--cyan)}
+.bo{background:transparent;color:var(--cyan2);border:1.5px solid var(--cyan)}
+.bo:hover{background:var(--cyanL)}
+.bg{background:var(--greenL);color:#065f46;border:1.5px solid #6ee7b7}
+.bg:hover{background:#a7f3d0}
+.bw{background:var(--amberL);color:#92400e;border:1.5px solid #fcd34d}
+.bw:hover{background:#fde68a}
+.bd{background:var(--redL);color:#991b1b;border:1.5px solid #fca5a5}
+.bd:hover{background:#fecaca}
+.bpurple{background:var(--purpleL);color:#5b21b6;border:1.5px solid #c4b5fd}
+.borange{background:var(--orangeL);color:#c2410c;border:1.5px solid #fdba74}
+
+/* PROGRESS */
+.prog-wrap{margin:8px 0}
+.prog-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px;transition:width 0.35s}
+.prog-lbl{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--txt2);margin-top:5px}
+
+/* DROP ZONE */
+.dz{border:2px dashed var(--border2);border-radius:var(--radius);padding:32px 16px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--surface)}
+.dz:hover,.dz.over,.dz:active{border-color:var(--cyan);background:var(--cyanLL);box-shadow:var(--shadow2)}
+.dz-emoji{font-size:2.5rem;margin-bottom:10px}
+.dz-title{font-size:1rem;font-weight:700;color:var(--txt2)}
+.dz-sub{font-size:0.75rem;color:var(--txt3);margin-top:4px}
+
+/* CHIPS */
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:0.65rem;font-weight:600;font-family:'DM Mono',monospace;white-space:nowrap}
+.ch-blue{background:var(--cyanL);color:var(--cyan2);border:1px solid #7dd3fc}
+.ch-green{background:var(--greenL);color:#065f46;border:1px solid #6ee7b7}
+.ch-amber{background:var(--amberL);color:#92400e;border:1px solid #fcd34d}
+.ch-red{background:var(--redL);color:#991b1b;border:1px solid #fca5a5}
+.ch-purple{background:var(--purpleL);color:#5b21b6;border:1px solid #c4b5fd}
+.ch-grey{background:var(--surface2);color:var(--txt2);border:1px solid var(--border)}
+.ch-orange{background:var(--orangeL);color:#c2410c;border:1px solid #fdba74}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;min-width:100%;font-size:0.82rem}
+thead{position:sticky;top:0;z-index:5;background:var(--surface2)}
+th{padding:10px 12px;text-align:right;color:var(--txt2);font-size:0.68rem;letter-spacing:0.05em;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'DM Mono',monospace}
+td{padding:9px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.78rem;white-space:nowrap;direction:ltr;text-align:left}
+td.rtl{direction:rtl;text-align:right;font-family:'DM Sans',sans-serif;font-size:0.85rem}
+tr:hover td{background:var(--cyanLL)}
+td.t-ok{color:var(--green);font-weight:600}
+td.t-warn{color:var(--amber);font-weight:600}
+td.t-red{color:var(--red);font-weight:600}
+.wdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:5px;vertical-align:middle;border:1.5px solid rgba(0,0,0,0.15)}
+
+/* PANEL */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.ph{padding:12px 15px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;gap:8px}
+.ph-left{display:flex;align-items:center;gap:8px;font-size:0.88rem;font-weight:700;color:var(--txt)}
+.ph-badge{font-family:'DM Mono',monospace;font-size:0.6rem;padding:2px 8px;border-radius:10px;background:var(--cyanL);color:var(--cyan2)}
+.pb{display:none}.pb.open{display:block}
+.pt{color:var(--txt3);font-size:0.8rem;transition:transform 0.2s}.pt.open{transform:rotate(180deg)}
+
+/* CHAT */
+#chat-wrap{display:flex;flex-direction:column;height:100%}
+#chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
+.msg{display:flex;gap:9px;align-items:flex-start;animation:msgIn 0.2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse}
+.bubble{max-width:88%;padding:11px 14px;font-size:0.88rem;line-height:1.65;border-radius:4px 14px 14px 14px}
+.msg.ai .bubble{background:var(--surface);border:1px solid var(--border);color:var(--txt);box-shadow:var(--shadow)}
+.msg.user .bubble{background:var(--cyan2);color:#fff;border-radius:14px 4px 14px 14px}
+.msg.sys .bubble{background:var(--greenL);border:1px solid #6ee7b7;color:#065f46;border-radius:10px;font-size:0.8rem;width:100%;text-align:center}
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;font-weight:800}
+.msg.ai .avatar{background:var(--cyanL);color:var(--cyan2);border:1.5px solid #7dd3fc}
+.msg.user .avatar{background:var(--cyan2);color:#fff}
+.msg-time{font-size:0.58rem;color:var(--txt3);margin-top:4px;font-family:'DM Mono',monospace}
+.sugs{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px}
+.sug{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px 13px;font-size:0.75rem;font-weight:500;color:var(--txt2);cursor:pointer;white-space:nowrap;transition:all 0.15s}
+.sug:hover,.sug:active{background:var(--cyanL);border-color:var(--cyan);color:var(--cyan2)}
+#cf{padding:10px 16px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+#ci-row{display:flex;gap:8px;align-items:flex-end}
+#ci{flex:1;background:var(--surface2);border:1.5px solid var(--border);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:0.9rem;padding:10px 13px;border-radius:var(--radius-sm);outline:none;resize:none;max-height:90px;min-height:42px}
+#ci:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
+#cs-btn{width:42px;height:42px;background:var(--cyan2);border:none;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(2,132,199,0.3)}
+#cs-btn:active{transform:scale(0.94)}
+#cs-btn svg{width:18px;height:18px;color:#fff}
+
+/* MEMORY */
+.mem-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;position:relative;box-shadow:var(--shadow)}
+.mem-type{font-size:0.62rem;font-family:'DM Mono',monospace;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+.mem-q{font-size:0.85rem;font-weight:700;color:var(--txt);margin-bottom:4px}
+.mem-a{font-size:0.78rem;color:var(--txt2);line-height:1.55}
+.mem-meta{font-size:0.6rem;color:var(--txt3);margin-top:5px;font-family:'DM Mono',monospace}
+.mem-del{position:absolute;left:10px;top:9px;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:0.9rem;padding:3px 7px;border-radius:4px}
+.mem-del:hover{background:var(--redL);color:var(--red)}
+
+/* LABELS */
+.lbl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;padding:12px}
+.lbl-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;text-align:center;font-family:'DM Mono',monospace;transition:all 0.15s;box-shadow:var(--shadow)}
+.lbl-card:hover,.lbl-card:active{border-color:var(--cyan);background:var(--cyanLL)}
+.lbl-id{font-size:0.6rem;color:var(--txt3);margin-bottom:3px}
+.lbl-main{font-size:0.85rem;font-weight:700;color:var(--txt)}
+
+/* CONFLICT */
+.conf-item{background:var(--redL);border:1px solid #fca5a5;border-radius:var(--radius-sm);padding:10px 13px;margin-bottom:7px}
+.conf-title{color:var(--red);font-size:0.82rem;font-weight:700}
+
+/* TITLE BLOCK */
+.tb-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tb-field{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px}
+.tb-label{font-size:0.6rem;font-family:'DM Mono',monospace;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
+.tb-value{font-size:0.9rem;font-weight:700;color:var(--txt)}
+.tb-value.mono{font-family:'DM Mono',monospace;color:var(--cyan2)}
+
+/* ══════════════════════════════
+   BALLOON DETECTION UI
+══════════════════════════════ */
+.balloon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;padding:12px}
+.balloon-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);cursor:default}
+.balloon-card.matched{border-color:#6ee7b7;background:#f0fdf4}
+.balloon-card.unmatched{border-color:#fca5a5;background:#fff5f5}
+.balloon-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;font-size:0.9rem;margin:0 auto 7px;border:2px solid var(--border2)}
+.balloon-card.matched .balloon-circle{border-color:var(--green);color:var(--green);background:var(--greenL)}
+.balloon-card.unmatched .balloon-circle{border-color:var(--red);color:var(--red);background:var(--redL)}
+.balloon-pn{font-size:0.65rem;font-family:'DM Mono',monospace;color:var(--cyan2);font-weight:600;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.balloon-desc{font-size:0.6rem;color:var(--txt3);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.balloon-status{font-size:0.58rem;font-family:'DM Mono',monospace;margin-top:4px;font-weight:600}
+.balloon-card.matched .balloon-status{color:var(--green)}
+.balloon-card.unmatched .balloon-status{color:var(--red)}
+
+/* ══════════════════════════════
+   NOTES PANEL
+══════════════════════════════ */
+.note-item{background:var(--surface);border-right:3px solid var(--amber);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 13px;margin-bottom:7px;box-shadow:var(--shadow)}
+.note-type{font-size:0.6rem;font-family:'DM Mono',monospace;color:var(--amber);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
+.note-text{font-size:0.82rem;color:var(--txt);line-height:1.55;direction:ltr;text-align:left}
+
+/* ══════════════════════════════
+   CUT LIST
+══════════════════════════════ */
+.cut-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.cut-stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;text-align:center}
+.cut-stat-val{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--cyan2)}
+.cut-stat-lbl{font-size:0.62rem;color:var(--txt3);margin-top:2px}
+
+/* ══════════════════════════════
+   STANDARD TIME (זמן תקן)
+══════════════════════════════ */
+.std-time-grid{display:grid;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.std-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);gap:8px;background:var(--surface)}
+.std-row:last-child{border-bottom:none}
+.std-row:nth-child(even){background:var(--surface2)}
+.std-row-name{font-size:0.82rem;font-weight:600;color:var(--txt)}
+.std-row-unit{font-size:0.68rem;color:var(--txt3);font-family:'DM Mono',monospace;white-space:nowrap}
+.std-input{width:70px;padding:5px 8px;font-size:0.82rem;font-family:'DM Mono',monospace;text-align:center;background:var(--cyanLL);border:1px solid #bae6fd;border-radius:6px;color:var(--cyan2);font-weight:600}
+.std-input:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(14,165,233,0.15);outline:none}
+
+/* STATION SUMMARY */
+.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.station-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;text-align:center}
+.station-name{font-size:0.65rem;font-family:'DM Mono',monospace;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.station-time{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;color:var(--cyan2)}
+.station-sub{font-size:0.6rem;color:var(--txt3);margin-top:2px}
+
+/* TOTAL TIME HERO */
+.time-hero{background:linear-gradient(135deg,var(--cyan2),#0369a1);border-radius:var(--radius);padding:16px;text-align:center;color:#fff;margin-bottom:12px;box-shadow:var(--shadow2)}
+.time-hero-lbl{font-size:0.72rem;font-family:'DM Mono',monospace;opacity:0.8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px}
+.time-hero-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800}
+.time-hero-sub{font-size:0.72rem;opacity:0.7;margin-top:2px}
+
+/* DOWNLOAD SCREEN */
+#dl-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:0}
+.dl-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:var(--cyan2);display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.dl-sub{font-size:0.75rem;color:var(--txt3);font-family:'DM Mono',monospace;letter-spacing:0.12em;margin-bottom:28px}
+.dl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;width:100%;max-width:480px;box-shadow:var(--shadow2)}
+.dl-title{font-size:1rem;font-weight:700;color:var(--txt);margin-bottom:4px}
+.dl-hint{font-size:0.75rem;color:var(--txt3);margin-bottom:16px;line-height:1.5}
+.dl-mod-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.dl-mod{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;transition:all 0.15s;display:flex;align-items:flex-start;gap:12px;user-select:none}
+.dl-mod.selected{border-color:var(--cyan);background:var(--cyanLL)}
+.dl-mod-chk{width:20px;height:20px;border-radius:5px;border:2px solid var(--border2);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.15s}
+.dl-mod.selected .dl-mod-chk{background:var(--cyan2);border-color:var(--cyan2);color:#fff}
+.dl-mod-info{flex:1}
+.dl-mod-name{font-weight:700;font-size:0.88rem;color:var(--txt);margin-bottom:2px}
+.dl-mod-desc{font-size:0.72rem;color:var(--txt2);line-height:1.45;margin-bottom:4px}
+.dl-mod-meta{display:flex;gap:8px;flex-wrap:wrap}
+.dl-mod-tag{font-size:0.6rem;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:10px}
+.tag-size{background:var(--surface2);color:var(--txt3);border:1px solid var(--border)}
+.tag-quality{background:var(--greenL);color:#065f46;border:1px solid #6ee7b7}
+.tag-use{background:var(--purpleL);color:#5b21b6;border:1px solid #c4b5fd}
+.dl-progress{margin-bottom:12px;display:none}
+.dl-state{font-size:0.72rem;font-family:'DM Mono',monospace;color:var(--txt3);padding:2px 0}
+.dl-state.ok{color:var(--green)}
+.dl-state.err{color:var(--red)}
+.dl-state.pending{color:var(--amber)}
+.shead{font-size:1rem;font-weight:700;color:var(--txt);padding:4px 0 8px}
+
+/* NOTIF */
+.notif{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius-sm);font-size:0.82rem;font-weight:600;margin-bottom:6px;transition:opacity 0.5s;animation:msgIn 0.2s ease}
+.ninfo{background:var(--cyanL);color:var(--cyan2)}
+.nwarn{background:var(--amberL);color:#92400e}
+.ndanger{background:var(--redL);color:#991b1b}
+.nok{background:var(--greenL);color:#065f46}
+
+/* TOAST */
+#toast{position:fixed;bottom:calc(70px + var(--sb));left:50%;transform:translateX(-50%);background:var(--txt);color:#fff;font-size:0.82rem;padding:8px 18px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:9998;white-space:nowrap}
+#toast.show{opacity:1}
+
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:sp 0.7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{text-align:center;color:var(--txt3);font-size:0.8rem;padding:20px!important;direction:rtl}
+
+@media print{
+  #topbar,#bnav,#dl-screen,.dz,#file-status,#raw-panel,.btn-row,.btn,.no-print{display:none!important}
+  .page{display:block!important;position:static;overflow:visible}
+  #results{display:block!important}
+}
+</style>
+</head>
+<body>
+
+<!-- DOWNLOAD SCREEN -->
+<div id="dl-screen">
+  <div class="dl-logo"><div class="logo-mark"></div>ENGCORE <span style="font-family:'DM Mono',monospace;font-size:0.55rem;color:var(--txt3);font-weight:400;margin-right:4px;">v14</span></div>
+  <div class="dl-sub">HARNESS INTELLIGENCE ENGINE · OFFLINE-FIRST</div>
+  <div class="dl-card">
+    <div class="dl-title">⬇ בחר מודולים להורדה</div>
+    <div class="dl-hint">חד-פעמי — נשמר במטמון. ניתן להוסיף בכל עת מ"זיכרון".</div>
+    <div class="dl-mod-list" id="mod-list">
+      <div class="dl-mod selected" id="mod-pdfjs" onclick="toggleMod('pdfjs')">
+        <div class="dl-mod-chk" id="chk-pdfjs">✓</div>
+        <div class="dl-mod-info">
+          <div class="dl-mod-name">📄 PDF.js — חילוץ PDF + Balloon Detection</div>
+          <div class="dl-mod-desc">חילוץ טקסט ועיגולי Balloon מ-PDF וקטורי (CAD). 95%+ דיוק.</div>
+          <div class="dl-mod-meta"><span class="dl-mod-tag tag-size">~3 MB</span><span class="dl-mod-tag tag-quality">95%+ PDF</span><span class="dl-mod-tag tag-use">Balloon ✓</span></div>
+        </div>
+      </div>
+      <div class="dl-mod selected" id="mod-ocr" onclick="toggleMod('ocr')">
+        <div class="dl-mod-chk" id="chk-ocr">✓</div>
+        <div class="dl-mod-info">
+          <div class="dl-mod-name">📷 Tesseract OCR v5</div>
+          <div class="dl-mod-desc">זיהוי טקסט מתמונות סרוקות. Fallback אוטומטי.</div>
+          <div class="dl-mod-meta"><span class="dl-mod-tag tag-size">~8 MB</span><span class="dl-mod-tag tag-quality">85% תמונות</span><span class="dl-mod-tag tag-use">iPhone ✓</span></div>
+        </div>
+      </div>
+      <div class="dl-mod" id="mod-trocr" onclick="toggleMod('trocr')">
+        <div class="dl-mod-chk" id="chk-trocr"></div>
+        <div class="dl-mod-info">
+          <div class="dl-mod-name">🔬 TrOCR-small · Microsoft</div>
+          <div class="dl-mod-desc">Transformer OCR. מדויק יותר על P/N וטבלאות BOM.</div>
+          <div class="dl-mod-meta"><span class="dl-mod-tag tag-size">~45 MB</span><span class="dl-mod-tag tag-quality">92%+</span><span class="dl-mod-tag tag-use">iPhone ✓</span></div>
+        </div>
+      </div>
+      <div class="dl-mod" id="mod-minilm" onclick="toggleMod('minilm')">
+        <div class="dl-mod-chk" id="chk-minilm"></div>
+        <div class="dl-mod-info">
+          <div class="dl-mod-name">💬 MiniLM — חיפוש סמנטי</div>
+          <div class="dl-mod-desc">שיפור חיפוש בצ'אט ובזיכרון.</div>
+          <div class="dl-mod-meta"><span class="dl-mod-tag tag-size">~23 MB</span><span class="dl-mod-tag tag-use">אופציונלי</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="dl-progress" id="dl-prog">
+      <div class="prog-track"><div class="prog-fill" id="dl-fill" style="width:0%"></div></div>
+      <div class="prog-lbl" id="dl-lbl">ממתין...</div>
+      <div id="dl-states" style="margin-top:8px;display:flex;flex-direction:column;gap:3px">
+        <div id="ds-pdfjs" class="dl-state pending">PDF.js: ממתין</div>
+        <div id="ds-ocr"   class="dl-state pending">Tesseract: ממתין</div>
+        <div id="ds-trocr" class="dl-state pending">TrOCR: ממתין</div>
+        <div id="ds-ml"    class="dl-state pending">MiniLM: ממתין</div>
+      </div>
+    </div>
+    <button class="btn bp" id="dl-btn" onclick="startDownload()">⬇&nbsp; הורד מודלים שנבחרו</button>
+    <button class="btn" style="background:transparent;color:var(--txt3);border:1px solid var(--border);margin-bottom:0;" onclick="skipDownload()">דלג — Parser בלבד</button>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div id="topbar" style="display:none;">
+  <div class="logo"><div class="logo-mark"></div>ENGCORE <span style="font-family:'DM Mono',monospace;font-size:0.52rem;color:var(--txt3);font-weight:400;margin-right:4px;">v14</span></div>
+  <div class="status-pills">
+    <div class="pill off" id="p-pdf"><div class="pill-dot"></div><span id="l-pdf">PDF</span></div>
+    <div class="pill off" id="p-ocr"><div class="pill-dot"></div><span id="l-ocr">OCR</span></div>
+    <div class="pill off" id="p-trocr"><div class="pill-dot"></div><span id="l-trocr">TrOCR</span></div>
+    <div class="pill off" id="p-ml"><div class="pill-dot"></div><span id="l-ml">AI</span></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+  <!-- PAGE: שרטוט -->
+  <div class="page on" id="p-ana">
+    <div class="dz" id="dz" onclick="document.getElementById('fi').click()"
+      ondragover="dzO(event)" ondragleave="dzL()" ondrop="dzDrop(event)">
+      <input type="file" id="fi" accept=".pdf,image/png,image/jpeg,image/webp" style="display:none" onchange="onFile(event)">
+      <div class="dz-emoji">📋</div>
+      <div class="dz-title">העלה שרטוט לניתוח</div>
+      <div class="dz-sub">PDF · PNG · JPG · גרור או לחץ</div>
+    </div>
+
+    <div id="file-status" style="display:none;">
+      <div class="card card-cyan">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+          <span style="font-size:1.4rem;" id="fs-icon">📄</span>
+          <div style="flex:1;">
+            <div style="font-family:'DM Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--cyan2);" id="fs-name"></div>
+            <div style="font-size:0.72rem;color:var(--txt3);" id="fs-meta"></div>
+          </div>
+          <button onclick="resetFile()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:1.1rem;padding:4px 8px;border-radius:6px;">✕</button>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-track"><div class="prog-fill" id="fp" style="width:0%"></div></div>
+          <div class="prog-lbl" id="fs-lbl">ממתין לניתוח...</div>
+        </div>
+        <div id="ocr-stage" style="display:none;margin-top:6px;padding:7px 10px;background:var(--cyanLL);border:1px solid #bae6fd;border-radius:8px;font-size:0.72rem;font-family:'DM Mono',monospace;color:var(--cyan2);"></div>
+        <div id="nc"></div>
+      </div>
+      <button class="btn bp" id="btn-run" onclick="runAnalysis()" style="margin-top:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        נתח שרטוט
+      </button>
+    </div>
+
+    <!-- Raw text -->
+    <div id="raw-panel" style="display:none;">
+      <div class="panel">
+        <div class="ph" onclick="toggleP('raw-body','raw-tog')">
+          <div class="ph-left">📝 טקסט גולמי <span class="ph-badge" id="raw-badge">0 תווים</span></div>
+          <span class="pt" id="raw-tog">▼</span>
+        </div>
+        <div class="pb" id="raw-body">
+          <div id="raw-txt" style="padding:12px;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--txt2);direction:ltr;text-align:left;white-space:pre-wrap;max-height:220px;overflow-y:auto;line-height:1.65;background:var(--surface2);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results" style="display:none;">
+
+      <!-- Title Block -->
+      <div class="card card-cyan" id="tb-card">
+        <div class="section-label">🏭 Title Block</div>
+        <div class="tb-grid" id="tb-grid"></div>
+        <div class="chips" id="tb-chips" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- NOTES (חדש) -->
+      <div id="notes-panel" style="display:none;">
+        <div class="panel">
+          <div class="ph" onclick="toggleP('notes-body','notes-tog')">
+            <div class="ph-left">📋 הערות שרטוט <span class="ph-badge" id="notes-cnt">0</span></div>
+            <span class="pt" id="notes-tog">▼</span>
+          </div>
+          <div class="pb" id="notes-body" style="padding:10px;"></div>
+        </div>
+      </div>
+
+      <!-- BALLOONS (חדש) -->
+      <div id="balloon-panel" style="display:none;">
+        <div class="panel">
+          <div class="ph" onclick="toggleP('balloon-body','balloon-tog')">
+            <div class="ph-left">🎈 Balloon → BOM <span class="ph-badge" id="balloon-cnt">0</span></div>
+            <span class="pt open" id="balloon-tog">▼</span>
+          </div>
+          <div class="pb open" id="balloon-body">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:8px;font-size:0.72rem;color:var(--txt2);">
+              <span id="balloon-matched-stat" class="chip ch-green">✓ 0 מותאם</span>
+              <span id="balloon-unmatched-stat" class="chip ch-red">✗ 0 לא מותאם</span>
+              <span id="balloon-missing-stat" class="chip ch-amber">⚠ 0 חסר ב-BOM</span>
+            </div>
+            <div class="balloon-grid" id="balloon-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFLICTS -->
+      <div id="conflict-zone" style="display:none;">
+        <div class="panel" style="border-color:#fca5a5;">
+          <div class="ph" onclick="toggleP('cf-body','cf-tog')" style="background:#fff5f5;">
+            <div class="ph-left" style="color:var(--red);">⚠ קונפליקטים <span class="ph-badge" id="cf-cnt" style="background:var(--redL);color:var(--red);">0</span></div>
+            <span class="pt open" id="cf-tog">▼</span>
+          </div>
+          <div class="pb open" id="cf-body" style="padding:10px;"></div>
+        </div>
+      </div>
+
+      <!-- BOM -->
+      <div class="panel">
+        <div class="ph" onclick="toggleP('bom-body','bom-tog')">
+          <div class="ph-left">📦 BOM <span class="ph-badge" id="bom-cnt">0</span></div>
+          <span class="pt open" id="bom-tog">▼</span>
+        </div>
+        <div class="pb open" id="bom-body">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>#</th><th>🎈</th><th>P/N</th><th>DESCRIPTION</th><th>QTY</th><th>UN</th><th>CAT</th></tr></thead>
+            <tbody id="bom-tb"></tbody>
+          </table></div>
+          <div class="btn-row" style="padding:10px;">
+            <button class="btn bg btn-sm" onclick="expCSV('bom')">⬇ CSV</button>
+            <button class="btn bpurple btn-sm" onclick="learnSect('bom')">🧠 למד</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WIRING -->
+      <div class="panel">
+        <div class="ph" onclick="toggleP('wire-body','wire-tog')">
+          <div class="ph-left">⚡ From-To <span class="ph-badge" id="wire-cnt">0</span></div>
+          <span class="pt open" id="wire-tog">▼</span>
+        </div>
+        <div class="pb open" id="wire-body">
+          <div style="padding:10px 12px;display:flex;gap:7px;border-bottom:1px solid var(--border);">
+            <input type="text" id="wf" placeholder="סנן..." style="flex:1;padding:7px 11px;font-size:0.82rem;margin-bottom:0;" oninput="filterWires()">
+            <select id="wf-conn" style="flex:1;padding:7px;font-size:0.78rem;margin-bottom:0;" onchange="filterWires()">
+              <option value="">כל המחברים</option>
+            </select>
+          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>#</th><th>FROM</th><th>PIN</th><th>TO</th><th>PIN</th><th>SIGNAL</th><th>AWG</th><th>COLOR</th><th>ST</th></tr></thead>
+            <tbody id="wire-tb"></tbody>
+          </table></div>
+          <div class="btn-row" style="padding:10px;">
+            <button class="btn bg btn-sm" onclick="expCSV('wire')">⬇ CSV</button>
+            <button class="btn bpurple btn-sm" onclick="learnSect('wire')">🧠 למד</button>
+            <button class="btn bw btn-sm" onclick="filterConflictsOnly()">⚠ קונפ' בלבד</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUT LIST (חדש) -->
+      <div class="panel">
+        <div class="ph" onclick="toggleP('cut-body','cut-tog')">
+          <div class="ph-left">✂️ Cut List <span class="ph-badge" id="cut-cnt">0</span></div>
+          <span class="pt open" id="cut-tog">▼</span>
+        </div>
+        <div class="pb open" id="cut-body">
+          <div class="cut-summary" id="cut-summary" style="padding:10px 10px 0;"></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>#</th><th>COLOR</th><th>SIGNAL</th><th>FROM</th><th>TO</th><th>AWG</th><th>אורך (mm)</th><th>כמות</th><th>סה"כ (mm)</th></tr></thead>
+            <tbody id="cut-tb"></tbody>
+          </table></div>
+          <div class="btn-row" style="padding:10px;">
+            <button class="btn bg btn-sm" onclick="expCSV('cutlist')">⬇ CSV</button>
+            <button class="btn borange btn-sm" onclick="expExcel()">📊 Excel מלא</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECTORS -->
+      <div class="panel">
+        <div class="ph" onclick="toggleP('conn-body','conn-tog')">
+          <div class="ph-left">🔌 מחברים <span class="ph-badge" id="conn-cnt">0</span></div>
+          <span class="pt" id="conn-tog">▼</span>
+        </div>
+        <div class="pb" id="conn-body">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>REF</th><th>PINS</th><th>P/N</th><th>LOCATION</th></tr></thead>
+            <tbody id="conn-tb"></tbody>
+          </table></div>
+          <div style="padding:10px;"><button class="btn bg btn-sm" onclick="expCSV('conn')">⬇ CSV</button></div>
+        </div>
+      </div>
+
+      <!-- LABELS -->
+      <div class="panel">
+        <div class="ph" onclick="toggleP('lbl-body','lbl-tog')">
+          <div class="ph-left">🏷️ לייבלים <span class="ph-badge" id="lbl-cnt">0</span></div>
+          <span class="pt" id="lbl-tog">▼</span>
+        </div>
+        <div class="pb" id="lbl-body">
+          <div class="lbl-grid" id="lbl-grid"></div>
+          <div class="btn-row" style="padding:10px;">
+            <button class="btn bg btn-sm" onclick="expCSV('labels')">⬇ CSV</button>
+            <button class="btn bo btn-sm" onclick="copyAllLabels()">📋 העתק הכל</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn borange" style="flex:1;margin-bottom:0;" onclick="expExcel()">📊 Excel מלא (6 שיטים)</button>
+        <button class="btn" style="flex:1;margin-bottom:0;background:var(--amberL);color:#92400e;border:1.5px solid #fcd34d;" onclick="exportAll()">⬇ HTML</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn bpurple" style="flex:1;margin-bottom:0;" onclick="learnAll()">🧠 שמור הכל בזיכרון</button>
+      </div>
+    </div>
+  </div><!-- /p-ana -->
+
+  <!-- PAGE: זמן תקן (חדש) -->
+  <div class="page" id="p-std">
+    <!-- TOTAL TIME HERO -->
+    <div class="time-hero" id="time-hero">
+      <div class="time-hero-lbl">זמן ייצור כולל מוערך</div>
+      <div class="time-hero-val" id="total-time-val">—</div>
+      <div class="time-hero-sub" id="total-time-sub">העלה שרטוט וחזור לכאן</div>
+    </div>
+
+    <!-- STATION BREAKDOWN -->
+    <div class="card" id="station-card" style="display:none;">
+      <div class="section-label">🏭 פירוט לפי תחנה</div>
+      <div class="station-grid" id="station-grid"></div>
+    </div>
+
+    <!-- STANDARD TIME TABLE -->
+    <div class="card">
+      <div class="section-label">⚙️ ערכי תקן — עריכה</div>
+      <div style="font-size:0.75rem;color:var(--txt3);margin-bottom:10px;line-height:1.55;">כל הערכים בדקות. שינויים נשמרים אוטומטית ומשפיעים על החישוב.</div>
+      <div class="std-time-grid" id="std-time-grid"></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn bo btn-sm" onclick="resetStdTimes()">↺ איפוס לברירת מחדל</button>
+        <button class="btn bp btn-sm" onclick="calcStdTime()">🔄 חשב מחדש</button>
+      </div>
+    </div>
+
+    <!-- WIRE-BY-WIRE BREAKDOWN -->
+    <div class="panel" id="std-detail-panel" style="display:none;">
+      <div class="ph" onclick="toggleP('std-detail-body','std-detail-tog')">
+        <div class="ph-left">📋 פירוט לפי חוט <span class="ph-badge" id="std-detail-cnt">0</span></div>
+        <span class="pt" id="std-detail-tog">▼</span>
+      </div>
+      <div class="pb" id="std-detail-body">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>#</th><th>SIGNAL</th><th>COLOR</th><th>חיתוך</th><th>קרימפ×2</th><th>הכנסה×2</th><th>לייבל</th><th>סה"כ (דק')</th></tr></thead>
+          <tbody id="std-detail-tb"></tbody>
+        </table></div>
+        <div style="padding:10px;">
+          <button class="btn bg btn-sm" onclick="expCSV('stdtime')">⬇ CSV זמן תקן</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /p-std -->
+
+  <!-- PAGE: שיחה -->
+  <div class="page" id="p-chat">
+    <div id="chat-wrap">
+      <div id="chat-msgs"></div>
+      <div id="sugs-wrap" class="sugs"></div>
+      <div id="cf">
+        <div id="ci-row">
+          <textarea id="ci" placeholder="שאל שאלה הנדסית..." rows="1" oninput="autoR(this)" onkeydown="ckeydown(event)" dir="rtl"></textarea>
+          <button id="cs-btn" onclick="sendMsg()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: זיכרון -->
+  <div class="page" id="p-mem">
+    <div class="shead">🧠 מאגר ידע מקומי</div>
+    <div class="card card-green">
+      <div class="section-label" style="color:var(--green);">🔒 כספת מקומית</div>
+      <div id="vault-stats" style="font-size:0.82rem;color:var(--txt2);line-height:2;"></div>
+      <div class="prog-wrap"><div class="prog-track"><div class="prog-fill" id="vbar" style="width:0%"></div></div></div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn bg btn-sm" onclick="exportVault()">💾 גיבוי JSON</button>
+        <button class="btn bo btn-sm" onclick="importVault()">📂 טען גיבוי</button>
+        <button class="btn bd btn-sm" onclick="clearVault()">🗑 מחק הכל</button>
+      </div>
+      <input type="file" id="imp-fi" accept=".json" style="display:none" onchange="doImport(event)">
+    </div>
+    <div class="card">
+      <div class="section-label">⚙️ מצב מודלים</div>
+      <div id="model-status-detail" style="font-size:0.82rem;color:var(--txt2);line-height:2;"></div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn bw btn-sm" onclick="showDLscreen()">⬇ הורד מחדש</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-label">➕ הוסף ידע ידנית</div>
+      <div class="field"><label class="lbl">שאלה / נושא</label><input type="text" id="mq" placeholder="לדוגמה: מה AWG 22 בmm²?" dir="rtl"></div>
+      <div class="field"><label class="lbl">תשובה / מידע</label><textarea id="ma" rows="3" style="resize:none;" dir="rtl" placeholder="הכנס ידע הנדסי..."></textarea></div>
+      <div class="field"><label class="lbl">תגיות (פסיק)</label><input type="text" id="mt" placeholder="AWG, IEC, מחברים" dir="rtl"></div>
+      <button class="btn bp" onclick="addManual()">שמור בזיכרון</button>
+    </div>
+    <div class="shead">ידע שנלמד (<span id="kb-cnt">0</span>)</div>
+    <div id="mem-list"></div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- BOTTOM NAV -->
+<div id="bnav" style="display:none;">
+  <button class="nb on" id="nav-ana" onclick="goPage('ana')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    שרטוט</button>
+  <button class="nb" id="nav-std" onclick="goPage('std')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    זמן תקן</button>
+  <button class="nb" id="nav-chat" onclick="goPage('chat')">
+    <div class="nb-pip" id="chat-pip"></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    שיחה</button>
+  <button class="nb" id="nav-mem" onclick="goPage('mem')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    זיכרון</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════
+var VAULT_KEY   = 'engcore_v14_vault';
+var CHAT_KEY    = 'engcore_v14_chat';
+var INIT_KEY    = 'engcore_v14_init';
+var MODS_KEY    = 'engcore_v14_mods';
+var STDTIME_KEY = 'engcore_v14_stdtime';
+
+var M = { ocrReady:false,ocrWorker:null,mlReady:false,mlPipe:null,pdfReady:false,trocrReady:false,trocrPipe:null };
+var CUR = { project:{},bom:[],wiring:[],connectors:[],labels:[],conflicts:[],rawText:'',fileName:'',fileType:'',notes:[],balloons:[] };
+var ALL_WIRES = [];
+var currentFile = null;
+var chatHistory = [];
+var _selectedMods = { pdfjs:true, ocr:true, trocr:false, minilm:false };
+
+// ══════════════════════════════════════════════
+//  STANDARD TIME DEFAULTS (דקות)
+// ══════════════════════════════════════════════
+var STD_DEFAULTS = [
+  { id:'cut',      name:'חיתוך חוט',          unit:'לכל חוט',    val:0.5,  station:'חיתוך' },
+  { id:'strip',    name:'קילוף קצה',           unit:'לכל קצה×2',  val:0.3,  station:'חיתוך' },
+  { id:'crimp',    name:'קרימפ / כווץ מסוף',   unit:'לכל קצה×2',  val:1.2,  station:'קרימפ' },
+  { id:'solder',   name:'הלחמה',               unit:'לכל קצה',    val:2.0,  station:'קרימפ' },
+  { id:'insert',   name:'הכנסה למחבר',         unit:'לכל קצה×2',  val:0.3,  station:'הרכבה' },
+  { id:'heatshrk', name:'Heatshrink / שרוול',  unit:'לכל חוט',    val:1.5,  station:'הרכבה' },
+  { id:'label',    name:'הדפסת לייבל',         unit:'לכל חוט',    val:0.4,  station:'הרכבה' },
+  { id:'jig',      name:'הידוק ללוח ייצור',    unit:'קבוע לפרויקט',val:5.0,  station:'הרכבה' },
+  { id:'test',     name:'בדיקת רצף',           unit:'לכל חוט',    val:0.5,  station:'בדיקה' },
+  { id:'hipot',    name:'בדיקת Hi-Pot',        unit:'קבוע לפרויקט',val:10.0, station:'בדיקה' },
+  { id:'visual',   name:'בדיקה ויזואלית',      unit:'קבוע לפרויקט',val:5.0,  station:'בדיקה' },
+  { id:'pack',     name:'אריזה',               unit:'קבוע לפרויקט',val:3.0,  station:'בדיקה' },
+];
+var _stdTimes = {};
+
+function loadStdTimes() {
+  try { var s=JSON.parse(localStorage.getItem(STDTIME_KEY)||'null'); if(s) _stdTimes=s; else resetStdTimes(true); }
+  catch(e) { resetStdTimes(true); }
+}
+function saveStdTimes() { try{localStorage.setItem(STDTIME_KEY,JSON.stringify(_stdTimes));}catch(e){} }
+function resetStdTimes(silent) {
+  STD_DEFAULTS.forEach(function(d){ _stdTimes[d.id]=d.val; });
+  saveStdTimes();
+  renderStdGrid();
+  if(!silent) { calcStdTime(); notif('איפוס לברירת מחדל','ok'); }
+}
+
+function renderStdGrid() {
+  var grid = document.getElementById('std-time-grid');
+  if(!grid) return;
+  grid.innerHTML = STD_DEFAULTS.map(function(d) {
+    return '<div class="std-row">'+
+      '<div><div class="std-row-name">'+escH(d.name)+'</div><div class="std-row-unit">'+escH(d.unit)+'</div></div>'+
+      '<span class="chip ch-grey" style="font-size:0.6rem;">'+escH(d.station)+'</span>'+
+      '<input class="std-input" type="number" step="0.1" min="0" max="999" id="std-'+d.id+'" value="'+(_stdTimes[d.id]||d.val)+'" onchange="onStdChange(\''+d.id+'\',this.value)">'+
+      '</div>';
+  }).join('');
+}
+
+function onStdChange(id, val) {
+  _stdTimes[id] = parseFloat(val)||0;
+  saveStdTimes();
+  calcStdTime();
+}
+
+// ══════════════════════════════════════════════
+//  CALCULATE STANDARD TIME
+// ══════════════════════════════════════════════
+function calcStdTime() {
+  var wires = ALL_WIRES;
+  var n = wires.length;
+  if (!n) {
+    document.getElementById('total-time-val').textContent = '—';
+    document.getElementById('total-time-sub').textContent = 'העלה שרטוט וחזור לכאן';
+    document.getElementById('station-card').style.display = 'none';
+    document.getElementById('std-detail-panel').style.display = 'none';
+    return;
+  }
+
+  var T = _stdTimes;
+  // Fixed per-project
+  var fixedTime = (T.jig||0) + (T.hipot||0) + (T.visual||0) + (T.pack||0);
+  // Per-wire
+  var wireTime = 0;
+  var detail = [];
+  wires.forEach(function(w) {
+    var tCut    = T.cut    || 0;
+    var tStrip  = (T.strip || 0) * 2;
+    var tCrimp  = (T.crimp || 0) * 2;
+    var tInsert = (T.insert|| 0) * 2;
+    var tLabel  = T.label  || 0;
+    var tHeat   = T.heatshrk || 0;
+    var tTest   = T.test   || 0;
+    var total   = tCut + tStrip + tCrimp + tInsert + tLabel + tHeat + tTest;
+    wireTime += total;
+    detail.push({
+      id: w.id, signal: w.signal||'', color: w.color||'',
+      tCut: tCut, tCrimp: tCrimp, tInsert: tInsert, tLabel: tLabel,
+      total: total
+    });
+  });
+
+  var totalMin = fixedTime + wireTime;
+  var hrs = Math.floor(totalMin/60), mins = Math.round(totalMin%60);
+  document.getElementById('total-time-val').textContent = (hrs?hrs+'h ':'')+mins+'m';
+  document.getElementById('total-time-sub').textContent = n+' חוטים · '+totalMin.toFixed(1)+' דקות סה"כ';
+
+  // Station breakdown
+  var stations = {};
+  STD_DEFAULTS.forEach(function(d){ if(!stations[d.station]) stations[d.station]=0; });
+  wires.forEach(function(w){
+    stations['חיתוך'] += (T.cut||0)+(T.strip||0)*2;
+    stations['קרימפ'] += (T.crimp||0)*2;
+    stations['הרכבה'] += (T.insert||0)*2+(T.heatshrk||0)+(T.label||0);
+    stations['בדיקה'] += (T.test||0);
+  });
+  stations['הרכבה'] += (T.jig||0);
+  stations['בדיקה'] += (T.hipot||0)+(T.visual||0)+(T.pack||0);
+
+  document.getElementById('station-card').style.display = 'block';
+  document.getElementById('station-grid').innerHTML = Object.keys(stations).map(function(s){
+    var m = stations[s], h=Math.floor(m/60), mn=Math.round(m%60);
+    return '<div class="station-card">'+
+      '<div class="station-name">'+escH(s)+'</div>'+
+      '<div class="station-time">'+(h?h+'h ':'')+mn+'m</div>'+
+      '<div class="station-sub">'+m.toFixed(0)+' דקות</div>'+
+      '</div>';
+  }).join('');
+
+  // Wire detail
+  document.getElementById('std-detail-panel').style.display = 'block';
+  document.getElementById('std-detail-cnt').textContent = detail.length;
+  var dotMap = CDOT;
+  document.getElementById('std-detail-tb').innerHTML = detail.map(function(d){
+    var dotColor = dotMap[d.color]||dotMap[(d.color||'').split(' ')[0]]||'#9ca3af';
+    return '<tr>'+
+      '<td style="color:var(--txt3)">'+d.id+'</td>'+
+      '<td style="font-weight:600;color:var(--purple)">'+escH(d.signal)+'</td>'+
+      '<td><span class="wdot" style="background:'+dotColor+'"></span>'+escH(d.color)+'</td>'+
+      '<td>'+d.tCut.toFixed(1)+'</td>'+
+      '<td>'+d.tCrimp.toFixed(1)+'</td>'+
+      '<td>'+d.tInsert.toFixed(1)+'</td>'+
+      '<td>'+d.tLabel.toFixed(1)+'</td>'+
+      '<td style="font-weight:700;color:var(--cyan2)">'+d.total.toFixed(1)+'</td>'+
+      '</tr>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+//  NOTES EXTRACTION
+// ══════════════════════════════════════════════
+var NOTE_CATEGORIES = {
+  torque:    { re:/torque|nm\b|n\.m\b|ft.lb/i,        label:'Torque', color:'var(--amber)' },
+  solder:    { re:/solder|tin|flux|ipc/i,              label:'הלחמה',  color:'var(--red)' },
+  heatshrk:  { re:/heat.?shr|shrink|sleeve/i,          label:'שרוול',  color:'var(--orange)' },
+  test:      { re:/test|cont|hi.?pot|dielectric/i,     label:'בדיקה',  color:'var(--green)' },
+  install:   { re:/install|mount|attach|assemble/i,    label:'התקנה',  color:'var(--cyan2)' },
+  general:   { re:/.*/,                                label:'כללי',   color:'var(--txt3)' },
+};
+
+function extractNotes(text) {
+  var notes = [];
+  // Pattern 1: numbered notes block
+  var noteBlockRe = /(?:GENERAL\s+NOTES?|NOTES?)\s*:?\s*\n([\s\S]{0,1500}?)(?:\n\n|\n(?=[A-Z]{4,})|$)/gi;
+  var bm;
+  while ((bm = noteBlockRe.exec(text)) !== null) {
+    var block = bm[1];
+    var lines = block.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>4;});
+    lines.forEach(function(l) {
+      // remove leading number/bullet
+      var clean = l.replace(/^[\d\.\-\*•]+\s*/,'').trim();
+      if (clean.length < 5) return;
+      var cat = 'general';
+      Object.keys(NOTE_CATEGORIES).forEach(function(k){ if(NOTE_CATEGORIES[k].re.test(clean)) cat=k; });
+      notes.push({ text: clean, category: cat });
+    });
+  }
+  // Pattern 2: inline numbered notes
+  if (!notes.length) {
+    var inlineRe = /\b(\d+)\.\s+([A-Z][^.!\n]{8,120}[.!])/g, im;
+    var count = 0;
+    while ((im = inlineRe.exec(text)) !== null && count < 15) {
+      var cl = im[2].trim();
+      if (cl.length < 10 || /^\d/.test(cl)) continue;
+      var cat2 = 'general';
+      Object.keys(NOTE_CATEGORIES).forEach(function(k){ if(NOTE_CATEGORIES[k].re.test(cl)) cat2=k; });
+      notes.push({ text: cl, category: cat2 });
+      count++;
+    }
+  }
+  // Pattern 3: NOTE: lines
+  var noteLineRe = /\bNOTE\s*[:–-]\s*([^\n]{8,200})/gi, nlm;
+  while ((nlm = noteLineRe.exec(text)) !== null) {
+    var nt = nlm[1].trim();
+    if (!notes.some(function(n){ return n.text === nt; })) {
+      var cat3 = 'general';
+      Object.keys(NOTE_CATEGORIES).forEach(function(k){ if(NOTE_CATEGORIES[k].re.test(nt)) cat3=k; });
+      notes.push({ text: nt, category: cat3 });
+    }
+  }
+  return notes.slice(0, 20);
+}
+
+function renderNotes(notes) {
+  var panel = document.getElementById('notes-panel');
+  var body  = document.getElementById('notes-body');
+  var cnt   = document.getElementById('notes-cnt');
+  if (!notes || !notes.length) { if(panel) panel.style.display='none'; return; }
+  panel.style.display = 'block';
+  cnt.textContent = notes.length;
+  body.innerHTML = notes.map(function(n) {
+    var c = NOTE_CATEGORIES[n.category]||NOTE_CATEGORIES.general;
+    return '<div class="note-item" style="border-right-color:'+c.color+'">'+
+      '<div class="note-type" style="color:'+c.color+'">'+escH(c.label)+'</div>'+
+      '<div class="note-text">'+escH(n.text)+'</div>'+
+      '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+//  BALLOON DETECTION
+// ══════════════════════════════════════════════
+function extractBalloons(text) {
+  var balloons = [];
+  var seen = {};
+
+  // Pattern 1: explicit balloon markers ①②③ etc.
+  var circledDigits = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
+  for (var ci=0; ci<circledDigits.length; ci++) {
+    if (text.indexOf(circledDigits[ci]) >= 0) {
+      var num = ci+1;
+      if (!seen[num]) { seen[num]=true; balloons.push({ num: num, source: 'unicode' }); }
+    }
+  }
+
+  // Pattern 2: (N) pattern near item numbers — must be standalone
+  var parenRe = /\((\d{1,2})\)/g, pm;
+  while ((pm = parenRe.exec(text)) !== null) {
+    var n2 = parseInt(pm[1]);
+    if (n2 >= 1 && n2 <= 30 && !seen[n2]) {
+      // Check context — nearby P/N or BOM keyword
+      var ctx = text.slice(Math.max(0,pm.index-40), pm.index+40);
+      if (/[A-Z]{2,}[\-\/][A-Z0-9\-\/]+|ITEM|BOM|P\/N|\d{4,}/i.test(ctx)) {
+        seen[n2]=true; balloons.push({ num: n2, source: 'paren' });
+      }
+    }
+  }
+
+  // Pattern 3: ITEM N or item numbers that appear isolated at line start
+  var itemLineRe = /^(\d{1,2})\s+([A-Z0-9][A-Z0-9\-\/\.]{2,30})\s/gm, ilm;
+  while ((ilm = itemLineRe.exec(text)) !== null) {
+    var n3 = parseInt(ilm[1]);
+    if (n3 >= 1 && n3 <= 30 && !seen[n3]) {
+      seen[n3]=true; balloons.push({ num: n3, source: 'bom_item' });
+    }
+  }
+
+  return balloons.sort(function(a,b){return a.num-b.num;});
+}
+
+function matchBalloonsWithBOM(balloons, bom) {
+  return balloons.map(function(b) {
+    var match = bom.find(function(item){ return item.item === b.num; });
+    return {
+      num:     b.num,
+      source:  b.source,
+      matched: !!match,
+      pn:      match ? match.pn      : '',
+      desc:    match ? match.desc     : '',
+      qty:     match ? match.qty      : 0,
+      unit:    match ? match.unit     : '',
+    };
+  });
+}
+
+function renderBalloons(matched) {
+  var panel = document.getElementById('balloon-panel');
+  var grid  = document.getElementById('balloon-grid');
+  var cnt   = document.getElementById('balloon-cnt');
+  if (!matched || !matched.length) { if(panel) panel.style.display='none'; return; }
+  panel.style.display = 'block';
+  cnt.textContent = matched.length;
+
+  var nMatched   = matched.filter(function(b){return b.matched;}).length;
+  var nUnmatched = matched.filter(function(b){return !b.matched;}).length;
+  // BOM items without balloon
+  var balNums    = matched.map(function(b){return b.num;});
+  var bomNoBaloon = CUR.bom.filter(function(b){return balNums.indexOf(b.item)<0;}).length;
+
+  document.getElementById('balloon-matched-stat').textContent   = '✓ '+nMatched+' מותאם';
+  document.getElementById('balloon-unmatched-stat').textContent = '✗ '+nUnmatched+' לא מותאם';
+  document.getElementById('balloon-missing-stat').textContent   = '⚠ '+bomNoBaloon+' חסר';
+
+  grid.innerHTML = matched.map(function(b) {
+    return '<div class="balloon-card '+(b.matched?'matched':'unmatched')+'">'+
+      '<div class="balloon-circle">'+b.num+'</div>'+
+      (b.matched
+        ? '<div class="balloon-pn">'+escH(b.pn)+'</div>'+
+          '<div class="balloon-desc">'+escH(b.desc)+'</div>'+
+          '<div class="balloon-status">✓ מותאם ×'+b.qty+' '+escH(b.unit)+'</div>'
+        : '<div class="balloon-pn" style="color:var(--red)">לא נמצא ב-BOM</div>'+
+          '<div class="balloon-status">✗ בלון ללא פריט</div>'
+      )+
+      '</div>';
+  }).join('');
+
+  // Update BOM table with balloon indicators
+  renderBOMwithBalloons(CUR.bom, matched);
+}
+
+function renderBOMwithBalloons(bom, balloonMap) {
+  var balByNum = {};
+  if (balloonMap) balloonMap.forEach(function(b){ balByNum[b.num]=b; });
+  var catColor={'WIRE':'ch-blue','CONNECTOR':'ch-green','CONTACT':'ch-purple','HEATSHRINK':'ch-amber','SLEEVING':'ch-amber','SPLICE':'ch-red','COMPONENT':'ch-grey','TERMINAL':'ch-grey','MATERIAL':'ch-grey','LABEL':'ch-grey'};
+  document.getElementById('bom-tb').innerHTML = bom.length ? bom.map(function(b){
+    var bal = balByNum[b.item];
+    var balCell = bal
+      ? '<span class="balloon-circle" style="width:22px;height:22px;font-size:0.7rem;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--green);color:var(--green);background:var(--greenL);font-family:\'DM Mono\',monospace;font-weight:700;">'+b.item+'</span>'
+      : '<span style="color:var(--txt3);font-size:0.7rem;">—</span>';
+    return '<tr>'+
+      '<td style="font-weight:700;color:var(--cyan2)">'+b.item+'</td>'+
+      '<td>'+balCell+'</td>'+
+      '<td style="font-weight:700;color:var(--purple)">'+escH(b.pn)+'</td>'+
+      '<td class="rtl">'+escH(b.desc)+'</td>'+
+      '<td style="font-weight:600">'+b.qty+'</td><td>'+escH(b.unit)+'</td>'+
+      '<td><span class="chip '+(catColor[b.category]||'ch-grey')+'" style="font-size:0.55rem;padding:1px 6px;">'+escH(b.category||'')+'</span></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">לא חולץ BOM</td></tr>';
+}
+
+// ══════════════════════════════════════════════
+//  CUT LIST
+// ══════════════════════════════════════════════
+function buildCutList(wires) {
+  // Group identical wires (same color+signal+spec) for batching
+  var groups = {};
+  wires.forEach(function(w) {
+    var key = (w.color||'?')+'|'+(w.spec||'22AWG')+'|'+(w.signal||'');
+    if (!groups[key]) groups[key] = { color:w.color, spec:w.spec||'22AWG', signal:w.signal, fromConn:w.fromConn, toConn:w.toConn, len:w.cutLength||0, wires:[] };
+    groups[key].wires.push(w);
+  });
+  return Object.values(groups).map(function(g,i){
+    return {
+      idx:      i+1,
+      color:    g.color,
+      spec:     g.spec,
+      signal:   g.signal,
+      fromConn: g.fromConn,
+      toConn:   g.toConn,
+      len:      g.len,
+      qty:      g.wires.length,
+      total:    g.len * g.wires.length,
+      wireIds:  g.wires.map(function(w){return w.id;}).join(',')
+    };
+  });
+}
+
+function renderCutList(wires) {
+  var cuts = buildCutList(wires);
+  document.getElementById('cut-cnt').textContent = cuts.length;
+
+  var totalLen = cuts.reduce(function(s,c){return s+c.total;},0);
+  var uniqueColors = [...new Set(cuts.map(function(c){return c.color;}))].length;
+  var totalWires = wires.length;
+
+  document.getElementById('cut-summary').innerHTML =
+    '<div class="cut-stat"><div class="cut-stat-val">'+totalWires+'</div><div class="cut-stat-lbl">חוטים</div></div>'+
+    '<div class="cut-stat"><div class="cut-stat-val">'+uniqueColors+'</div><div class="cut-stat-lbl">צבעים</div></div>'+
+    '<div class="cut-stat"><div class="cut-stat-val">'+(totalLen/1000).toFixed(1)+'m</div><div class="cut-stat-lbl">סה"כ אורך</div></div>';
+
+  document.getElementById('cut-tb').innerHTML = cuts.length ? cuts.map(function(c){
+    var dotColor = CDOT[c.color]||CDOT[(c.color||'').split(' ')[0]]||'#9ca3af';
+    return '<tr>'+
+      '<td style="color:var(--txt3)">'+c.idx+'</td>'+
+      '<td><span class="wdot" style="background:'+dotColor+'"></span>'+escH(c.color||'')+'</td>'+
+      '<td style="font-weight:600;color:var(--purple)">'+escH(c.signal||'')+'</td>'+
+      '<td>'+escH(c.fromConn||'')+'</td>'+
+      '<td>'+escH(c.toConn||'')+'</td>'+
+      '<td>'+escH(c.spec||'')+'</td>'+
+      '<td style="font-weight:700;color:var(--cyan2)">'+(c.len||'—')+'</td>'+
+      '<td style="font-weight:600">'+c.qty+'</td>'+
+      '<td style="font-weight:700;color:var(--green)">'+(c.total||'—')+'</td>'+
+      '</tr>';
+  }).join('') : '<tr><td colspan="9" class="empty">לא חולץ אורך</td></tr>';
+}
+
+// ══════════════════════════════════════════════
+//  EXCEL EXPORT (SheetJS) — 6 sheets
+// ══════════════════════════════════════════════
+function expExcel() {
+  if (typeof XLSX === 'undefined') {
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=function(){ _doExcel(); };
+    s.onerror=function(){ notif('SheetJS לא נטען','danger'); };
+    document.head.appendChild(s);
+  } else {
+    _doExcel();
+  }
+}
+
+function _doExcel() {
+  var wb = XLSX.utils.book_new();
+  var p  = CUR.project;
+
+  // ── Sheet 1: Title Block ──
+  var tbData = [['שדה','ערך']];
+  [['Drawing No.',p.drawingNo],['Rev',p.rev],['Title',p.title],['Company',p.company],
+   ['Date',p.date],['Drawn',p.drawn],['Approved',p.approved],['Cable Length mm',p.cableLength],
+   ['Tolerance',p.tolerance],['File',CUR.fileName]].forEach(function(r){if(r[1])tbData.push(r);});
+  var wsTB = XLSX.utils.aoa_to_sheet(tbData);
+  wsTB['!cols'] = [{wch:20},{wch:40}];
+  XLSX.utils.book_append_sheet(wb, wsTB, 'Title Block');
+
+  // ── Sheet 2: BOM ──
+  var bomData = [['ITEM','P/N','DESCRIPTION','QTY','UNIT','CATEGORY','BALLOON']];
+  CUR.bom.forEach(function(b){
+    var bal = CUR.balloons.find(function(x){return x.num===b.item;});
+    bomData.push([b.item,b.pn,b.desc,b.qty,b.unit,b.category||'',bal?'✓ #'+b.item:'']);
+  });
+  var wsBOM = XLSX.utils.aoa_to_sheet(bomData);
+  wsBOM['!cols'] = [{wch:6},{wch:30},{wch:50},{wch:6},{wch:6},{wch:14},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsBOM, 'BOM');
+
+  // ── Sheet 3: Wiring ──
+  var wireData = [['#','FROM','FROM PIN','TO','TO PIN','SIGNAL','AWG','COLOR','STATUS','CONFLICT']];
+  ALL_WIRES.forEach(function(w){
+    wireData.push([w.id,w.fromConn,w.fromPin,w.toConn,w.toPin,w.signal,w.spec||w.awg||'',w.color,w.status,w.conflictNote||'']);
+  });
+  var wsWire = XLSX.utils.aoa_to_sheet(wireData);
+  wsWire['!cols'] = [{wch:4},{wch:14},{wch:8},{wch:14},{wch:8},{wch:20},{wch:8},{wch:10},{wch:8},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, wsWire, 'Wiring');
+
+  // ── Sheet 4: Cut List ──
+  var cuts = buildCutList(ALL_WIRES);
+  var cutData = [['#','COLOR','SIGNAL','FROM','TO','AWG','אורך (mm)','כמות','סה"כ (mm)']];
+  cuts.forEach(function(c){
+    cutData.push([c.idx,c.color,c.signal,c.fromConn,c.toConn,c.spec,c.len||0,c.qty,c.total||0]);
+  });
+  var wsCut = XLSX.utils.aoa_to_sheet(cutData);
+  wsCut['!cols'] = [{wch:4},{wch:10},{wch:20},{wch:12},{wch:12},{wch:8},{wch:10},{wch:8},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsCut, 'Cut List');
+
+  // ── Sheet 5: Connectors + Labels ──
+  var connData = [['REF','PINS','P/N','LOCATION'],[]];
+  CUR.connectors.forEach(function(c){connData.push([c.ref,c.pins,c.pn||'',c.location||'']);});
+  connData.push([],['--- LABELS ---'],['ID','CONNECTOR','P/N','LABEL TEXT']);
+  CUR.labels.forEach(function(l){connData.push([l.id,l.connector||'',l.pn||'',l.labelText||'']);});
+  var wsConn = XLSX.utils.aoa_to_sheet(connData);
+  wsConn['!cols'] = [{wch:14},{wch:6},{wch:30},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, wsConn, 'Connectors');
+
+  // ── Sheet 6: Standard Time ──
+  var n = ALL_WIRES.length;
+  var T = _stdTimes;
+  var stdData = [
+    ['ENGCORE v14 — זמן תקן','','',''],
+    ['שרטוט:',(p.drawingNo||CUR.fileName||'—'),'חוטים:',n],
+    [],
+    ['תחנה','פעולה','יח\' מדידה','ערך (דק\')','כמות','סה"כ (דק\')']
+  ];
+  STD_DEFAULTS.forEach(function(d){
+    var val = _stdTimes[d.id]||d.val;
+    var isFixed = /קבוע/.test(d.unit);
+    var qty = isFixed ? 1 : /×2/.test(d.unit) ? n*2 : n;
+    var tot = val * qty;
+    stdData.push([d.station, d.name, d.unit, val, qty, tot]);
+  });
+  var totalMin = STD_DEFAULTS.reduce(function(s,d){
+    var val=_stdTimes[d.id]||d.val;
+    var isFixed=/קבוע/.test(d.unit);
+    var qty=isFixed?1:/×2/.test(d.unit)?n*2:n;
+    return s+val*qty;
+  },0);
+  var hrs=Math.floor(totalMin/60),mins=Math.round(totalMin%60);
+  stdData.push([],['','','','','סה"כ:',(hrs?hrs+'h ':'')+mins+'m ('+totalMin.toFixed(1)+' דק\')']);
+  var wsStd = XLSX.utils.aoa_to_sheet(stdData);
+  wsStd['!cols'] = [{wch:10},{wch:24},{wch:16},{wch:12},{wch:8},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsStd, 'Standard Time');
+
+  var fname = (p.drawingNo||'harness')+'_ENGCORE_v14_'+Date.now()+'.xlsx';
+  XLSX.writeFile(wb, fname);
+  notif('Excel יוצא — 6 שיטים ✓','ok');
+}
+
+// ══════════════════════════════════════════════
+//  MODULE SELECTION & BOOT (same as v13, updated keys)
+// ══════════════════════════════════════════════
+function toggleMod(id) {
+  _selectedMods[id] = !_selectedMods[id];
+  var el=document.getElementById('mod-'+id), chk=document.getElementById('chk-'+id);
+  if(_selectedMods[id]){if(el)el.classList.add('selected');if(chk)chk.textContent='✓';}
+  else{if(el)el.classList.remove('selected');if(chk)chk.textContent='';}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadStdTimes();
+  renderStdGrid();
+  ensureBuiltIn();
+  updateVaultStats();
+  try {
+    var sm=JSON.parse(localStorage.getItem(MODS_KEY)||'null');
+    if(sm){_selectedMods=Object.assign({pdfjs:true,ocr:true,trocr:false,minilm:false},sm);
+      ['pdfjs','ocr','trocr','minilm'].forEach(function(k){
+        var el=document.getElementById('mod-'+k),chk=document.getElementById('chk-'+k);
+        if(!_selectedMods[k]){if(el)el.classList.remove('selected');if(chk)chk.textContent='';}
+        else{if(el)el.classList.add('selected');if(chk)chk.textContent='✓';}
+      });
+    }
+  } catch(e){}
+  var initState=localStorage.getItem(INIT_KEY);
+  if(initState&&initState!==''){enterApp();silentInit(initState);}
+  else document.getElementById('dl-screen').style.display='flex';
+});
+
+function enterApp(){
+  document.getElementById('dl-screen').style.display='none';
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('app').style.display='block';
+  document.getElementById('bnav').style.display='flex';
+  loadChatHistory();
+  if(!chatHistory.length)bootGreet();
+  renderMemory();updateSugs();updateModelStatusDetail();
+}
+
+function startDownload(){
+  localStorage.setItem(MODS_KEY,JSON.stringify(_selectedMods));
+  var btn=document.getElementById('dl-btn');btn.disabled=true;btn.innerHTML='<span class="spin"></span>&nbsp; מוריד...';
+  document.getElementById('dl-prog').style.display='block';
+  var steps=[];
+  if(_selectedMods.pdfjs)  steps.push({id:'pdfjs',label:'PDF.js',fn:loadPDFjs});
+  if(_selectedMods.ocr)    steps.push({id:'ocr',  label:'Tesseract',fn:loadTesseract});
+  if(_selectedMods.trocr)  steps.push({id:'trocr',label:'TrOCR',fn:loadTrOCRsmall});
+  if(_selectedMods.minilm) steps.push({id:'ml',   label:'MiniLM',fn:loadMiniLM});
+  if(!steps.length){localStorage.setItem(INIT_KEY,'skip');setTimeout(enterApp,400);return;}
+  var total=steps.length,done=0;
+  function runNext(i){
+    if(i>=steps.length){setDL(100,'✓ הכל מוכן!');var parts=[];if(M.pdfReady)parts.push('pdf');if(M.ocrReady)parts.push('ocr');if(M.trocrReady)parts.push('trocr');if(M.mlReady)parts.push('ml');localStorage.setItem(INIT_KEY,parts.join('+')||'skip');setTimeout(enterApp,1200);return;}
+    var s=steps[i];setDLstate(s.id,'pending',s.label+': מוריד...');setDL(Math.round(i/total*90),s.label+'...');
+    s.fn(function(ok){setDLstate(s.id,ok?'ok':'err',s.label+': '+(ok?'✓ מוכן':'✗ נכשל'));done++;setDL(Math.round(done/total*90),s.label+' '+(ok?'מוכן':'נכשל'));runNext(i+1);});
+  }
+  runNext(0);
+}
+function skipDownload(){localStorage.setItem(INIT_KEY,'skip');enterApp();notif('עובד ללא מודלים','warn');}
+function showDLscreen(){document.getElementById('dl-screen').style.display='flex';document.getElementById('topbar').style.display='none';document.getElementById('app').style.display='none';document.getElementById('bnav').style.display='none';document.getElementById('dl-prog').style.display='none';setDL(0,'לחץ "הורד" להתחלה');var btn=document.getElementById('dl-btn');btn.disabled=false;btn.innerHTML='⬇&nbsp; הורד מודלים שנבחרו';}
+function silentInit(state){if(state.indexOf('pdf')>=0)loadPDFjs(function(){});if(state.indexOf('ocr')>=0)loadTesseract(function(){});if(state.indexOf('trocr')>=0)loadTrOCRsmall(function(){});if(state.indexOf('ml')>=0)loadMiniLM(function(){});}
+function setDL(pct,msg){document.getElementById('dl-fill').style.width=pct+'%';document.getElementById('dl-lbl').textContent=msg;}
+function setDLstate(id,cls,txt){var el=document.getElementById('ds-'+id);if(!el)return;el.textContent=txt;el.className='dl-state '+cls;}
+
+// MODULE LOADERS (same as v13)
+function loadPDFjs(cb){if(typeof pdfjsLib!=='undefined'){M.pdfReady=true;setMdot('pdf','ok','PDF ✓');if(cb)cb(true);return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=function(){try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';M.pdfReady=true;setMdot('pdf','ok','PDF ✓');if(cb)cb(true);}catch(e){setMdot('pdf','off','PDF ✗');if(cb)cb(false);}};s.onerror=function(){setMdot('pdf','off','PDF —');if(cb)cb(false);};document.head.appendChild(s);}
+function loadTesseract(cb){if(typeof Tesseract!=='undefined'){createOCRWorker(cb);return;}var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=function(){createOCRWorker(cb);};s.onerror=function(){setMdot('ocr','off','OCR —');if(cb)cb(false);};document.head.appendChild(s);}
+function createOCRWorker(cb){try{Tesseract.createWorker(['eng'],1,{logger:function(m){if(m.status==='recognizing text')setFS(5+m.progress*40,'OCR: '+Math.round(m.progress*100)+'%');}}).then(function(w){M.ocrWorker=w;M.ocrReady=true;setMdot('ocr','ok','OCR ✓');if(cb)cb(true);}).catch(function(){setMdot('ocr','off','OCR ✗');if(cb)cb(false);});}catch(e){setMdot('ocr','off','OCR ✗');if(cb)cb(false);}}
+function loadMiniLM(cb){if(M.mlReady&&M.mlPipe){if(cb)cb(true);return;}var CDN='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0/dist/transformers.min.js';import(CDN).then(function(mod){var T=mod.default||mod;T.env.allowRemoteModels=true;T.env.useBrowserCache=true;T.pipeline('feature-extraction','Xenova/all-MiniLM-L6-v2',{progress_callback:function(p){if(p.progress!==undefined)setDL(52+Math.round(p.progress*0.46),'MiniLM: '+Math.round(p.progress)+'%');}}).then(function(pipe){M.mlPipe=pipe;M.mlReady=true;setMdot('ml','ok','AI ✓');if(cb)cb(true);}).catch(function(){setMdot('ml','off','AI ✗');if(cb)cb(false);});}).catch(function(){setMdot('ml','off','AI offline');if(cb)cb(false);});}
+function loadTrOCRsmall(cb){if(M.trocrReady&&M.trocrPipe){if(cb)cb(true);return;}var CDN='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0/dist/transformers.min.js';import(CDN).then(function(mod){var T=mod.default||mod;T.env.allowRemoteModels=true;T.env.useBrowserCache=true;T.pipeline('image-to-text','Xenova/trocr-small-printed',{dtype:'q8',progress_callback:function(p){if(p.status==='progress'&&p.progress!=null)setDLstate('trocr','pending','TrOCR: '+Math.round(p.progress)+'%');}}).then(function(pipe){M.trocrReady=true;M.trocrPipe=pipe;setMdot('trocr','ok','TrOCR ✓');if(cb)cb(true);}).catch(function(){setMdot('trocr','off','TrOCR ✗');if(cb)cb(false);});}).catch(function(){setMdot('trocr','off','TrOCR offline');if(cb)cb(false);});}
+function setMdot(id,state,label){var p=document.getElementById('p-'+id),l=document.getElementById('l-'+id);if(p)p.className='pill '+(state==='ok'?'ok':state==='spin'?'spin-p':'off');if(l)l.textContent=label;}
+
+// SEARCH
+function tokenize(t){return String(t||'').toLowerCase().replace(/[^\u0590-\u05FFa-z0-9\s\-_\/]/g,' ').split(/\s+/).filter(function(x){return x.length>1;});}
+function tfidfSim(a,b){var ta=tokenize(a),tb=tokenize(b);if(!ta.length||!tb.length)return 0;var sA={},sB={};ta.forEach(function(t){sA[t]=(sA[t]||0)+1;});tb.forEach(function(t){sB[t]=(sB[t]||0)+1;});var inter=0;Object.keys(sA).forEach(function(k){if(sB[k])inter+=Math.min(sA[k],sB[k]);});return inter/Math.sqrt(ta.length*tb.length);}
+function tfidfSearch(q,items,topK){return items.map(function(item){var s=tfidfSim(q,item.q);if(item.tags)item.tags.forEach(function(tag){if(String(q).toLowerCase().indexOf(tag.toLowerCase())>=0)s+=0.1;});return{item:item,score:s};}).filter(function(r){return r.score>0.08;}).sort(function(a,b){return b.score-a.score;}).slice(0,topK||3);}
+function cosineSim(a,b){var d=0,na=0,nb=0;for(var i=0;i<a.length;i++){d+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];}return d/(Math.sqrt(na)*Math.sqrt(nb)+1e-10);}
+async function smartSearch(q,items,topK){if(M.mlReady&&M.mlPipe){try{var qE=await M.mlPipe(q,{pooling:'mean',normalize:true});var sc=await Promise.all(items.map(async function(item){var iE=await M.mlPipe(item.q,{pooling:'mean',normalize:true});return{item:item,score:cosineSim(qE.data,iE.data)};}));return sc.sort(function(a,b){return b.score-a.score;}).slice(0,topK||3);}catch(e){return tfidfSearch(q,items,topK);}}return tfidfSearch(q,items,topK);}
+
+// VAULT
+function vLoad(){try{return JSON.parse(localStorage.getItem(VAULT_KEY)||'[]');}catch(e){return[];}}
+function vSave(items){try{localStorage.setItem(VAULT_KEY,JSON.stringify(items));}catch(e){notif('אחסון מלא','danger');}updateVaultStats();}
+function vAdd(q,a,tags,source){var items=vLoad();var existing=items.find(function(i){return tfidfSim(i.q,q)>0.85;});if(existing){existing.a=a;existing.tags=tags;existing.ts=Date.now();}else{items.push({id:Date.now().toString(36),q:q,a:a,tags:tags||[],source:source||'manual',ts:Date.now()});}vSave(items);renderMemory();}
+function updateVaultStats(){var items=vLoad();var el=document.getElementById('vault-stats');var bar=document.getElementById('vbar');var cnt=document.getElementById('kb-cnt');if(el)el.innerHTML='פריטים: <strong>'+items.length+'</strong> &nbsp;|&nbsp; גרסה: <strong>v14</strong>';if(bar)bar.style.width=Math.min(100,items.length/2)+'%';if(cnt)cnt.textContent=items.length;}
+function exportVault(){var d=JSON.stringify({version:'v14',vault:vLoad(),exportedAt:new Date().toISOString()},null,2);dlBlob(new Blob([d],{type:'application/json'}),'engcore_v14_vault_'+Date.now()+'.json');notif('גיבוי יוצא','ok');}
+function importVault(){document.getElementById('imp-fi').click();}
+function doImport(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){try{var d=JSON.parse(ev.target.result);var items=d.vault||d;if(!Array.isArray(items))throw 0;var ex=vLoad();var added=0;items.forEach(function(i){if(!ex.some(function(m){return m.id===i.id;})){ex.push(i);added++;}});vSave(ex);renderMemory();notif('יובאו '+added+' פריטים','ok');}catch(e2){notif('שגיאת ייבוא','danger');}e.target.value='';};r.readAsText(f);}
+function clearVault(){if(!confirm('מחק את כל הזיכרון?'))return;localStorage.removeItem(VAULT_KEY);renderMemory();updateVaultStats();notif('הזיכרון נמחק','warn');}
+function addManual(){var q=document.getElementById('mq').value.trim(),a=document.getElementById('ma').value.trim(),t=document.getElementById('mt').value.trim();if(!q||!a){notif('מלא שאלה ותשובה','warn');return;}var tags=t?t.split(',').map(function(x){return x.trim();}).filter(Boolean):[];vAdd(q,a,tags,'manual');document.getElementById('mq').value='';document.getElementById('ma').value='';document.getElementById('mt').value='';notif('נשמר','ok');}
+function renderMemory(){var items=vLoad().slice().reverse();var el=document.getElementById('mem-list');if(!el)return;el.innerHTML=items.length?items.map(function(item){return'<div class="mem-item"><button class="mem-del" onclick="delMem(\''+item.id+'\')">🗑</button><div class="mem-type">'+escH(item.source||'manual')+'</div><div class="mem-q">'+escH(item.q)+'</div><div class="mem-a">'+escH(item.a.slice(0,200))+'</div><div class="mem-meta">'+new Date(item.ts||0).toLocaleDateString('he-IL')+(item.tags&&item.tags.length?' · '+escH(item.tags.join(', ')):'')+'</div></div>';}).join(''):'<div style="color:var(--txt3);font-size:0.85rem;text-align:center;padding:20px;">הזיכרון ריק</div>';}
+function delMem(id){var items=vLoad().filter(function(i){return i.id!==id;});vSave(items);renderMemory();}
+function updateModelStatusDetail(){var el=document.getElementById('model-status-detail');if(!el)return;el.innerHTML='PDF.js: <strong style="color:'+(M.pdfReady?'var(--green)':'var(--amber)')+'">'+( M.pdfReady?'✓ פעיל':'לא פעיל')+'</strong><br>Tesseract: <strong style="color:'+(M.ocrReady?'var(--green)':'var(--amber)')+'">'+( M.ocrReady?'✓ פעיל':'לא פעיל')+'</strong><br>TrOCR: <strong style="color:'+(M.trocrReady?'var(--green)':'var(--amber)')+'">'+( M.trocrReady?'✓ פעיל':'לא פעיל')+'</strong><br>MiniLM: <strong style="color:'+(M.mlReady?'var(--green)':'var(--amber)')+'">'+( M.mlReady?'✓ פעיל':'לא פעיל (TF-IDF)')+'</strong><br>מנוע: <strong style="color:var(--green)">HarnessPro v4 Engine ✓</strong>';}
+
+// ══════════════════════════════════════════════
+//  FILE HANDLING (same as v13)
+// ══════════════════════════════════════════════
+var CDOT={'RED':'#ef4444','BLK':'#111827','BLACK':'#111827','WHT':'#e5e7eb','WHITE':'#e5e7eb','BLU':'#3b82f6','BLUE':'#3b82f6','GRN':'#10b981','GREEN':'#10b981','YEL':'#f59e0b','YELLOW':'#f59e0b','ORN':'#f97316','ORANGE':'#f97316','VIO':'#8b5cf6','VIOLET':'#8b5cf6','GRY':'#9ca3af','GREY':'#9ca3af','BRN':'#78350f','BROWN':'#78350f','PNK':'#ec4899','PINK':'#ec4899','SHIELD':'#6b7280','BARE':'#d1d5db'};
+var CNORM={'RED':'RED','BLK':'BLK','BLACK':'BLK','WHT':'WHT','WHITE':'WHT','BLU':'BLU','BLUE':'BLU','GRN':'GRN','GREEN':'GRN','YEL':'YEL','YELLOW':'YEL','ORN':'ORN','ORANGE':'ORN','VIO':'VIO','VIOLET':'VIO','GRY':'GRY','GREY':'GRY','GRAY':'GRY','BRN':'BRN','BROWN':'BRN','PNK':'PNK','PINK':'PNK','SHIELD':'SHIELD','BARE':'BARE'};
+function nc(c){return CNORM[(c||'').toUpperCase()]||c.toUpperCase();}
+function dzO(e){e.preventDefault();document.getElementById('dz').classList.add('over');}
+function dzL(){document.getElementById('dz').classList.remove('over');}
+function dzDrop(e){e.preventDefault();dzL();var f=e.dataTransfer.files[0];if(f){currentFile=f;showFileCard(f);}}
+function onFile(e){var f=e.target.files[0];if(f){currentFile=f;showFileCard(f);}}
+function showFileCard(f){document.getElementById('dz').style.display='none';document.getElementById('file-status').style.display='block';document.getElementById('fs-icon').textContent=f.type.indexOf('image')>=0?'🖼️':'📄';document.getElementById('fs-name').textContent=f.name;document.getElementById('fs-meta').textContent=(f.size/1024).toFixed(1)+' KB · '+f.type;CUR.fileName=f.name;setFS(0,'קובץ נטען — לחץ "נתח שרטוט"');}
+function resetFile(){currentFile=null;document.getElementById('dz').style.display='block';document.getElementById('file-status').style.display='none';document.getElementById('results').style.display='none';document.getElementById('raw-panel').style.display='none';document.getElementById('conflict-zone').style.display='none';document.getElementById('balloon-panel').style.display='none';document.getElementById('notes-panel').style.display='none';}
+function setFS(pct,msg){document.getElementById('fp').style.width=pct+'%';document.getElementById('fs-lbl').textContent=msg;var stage=document.getElementById('ocr-stage');if(stage){if(pct>0&&pct<100){stage.style.display='block';stage.textContent='⏳ '+msg;}else if(pct>=100){stage.style.display='block';stage.textContent='✓ '+msg;stage.style.background='var(--greenL)';stage.style.borderColor='#6ee7b7';stage.style.color='var(--green)';}else{stage.style.display='none';}}}
+
+function runAnalysis(){
+  if(!currentFile){notif('אין קובץ','warn');return;}
+  document.getElementById('btn-run').disabled=true;
+  setFS(5,'קורא קובץ...');
+  var f=currentFile;
+  if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
+    var reader=new FileReader();reader.onload=function(e){extractPDF(e.target.result);};reader.readAsArrayBuffer(f);
+  } else if(f.type.indexOf('image')===0){
+    var reader2=new FileReader();reader2.onload=function(e){extractImg(e.target.result);};reader2.readAsDataURL(f);
+  }
+}
+
+// PDF + OCR pipeline — same as v13
+function extractPDF(ab){if(M.pdfReady&&typeof pdfjsLib!=='undefined'){setFS(15,'PDF.js: חילוץ טקסט...');doPDFextract(ab);return;}setFS(10,'מנוע PDF מובנה...');_azExtractPDFAsync(ab).then(function(text){if(text&&text.trim().length>30){setFS(60,'✓ PDF חולץ');showRaw(text);setTimeout(function(){processText(text);},100);}else tryOCRonPDF(ab);}).catch(function(){tryOCRonPDF(ab);});}
+function doPDFextract(ab){pdfjsLib.getDocument({data:ab}).promise.then(function(doc){setMdot('pdf','ok','PDF ✓');var np=doc.numPages,allText='',pending=np;for(var i=1;i<=np;i++){(function(pg){doc.getPage(pg).then(function(page){page.getTextContent().then(function(tc){var pt=tc.items.map(function(it){return it.str;}).join('\n');allText+=(allText?'\n--- PAGE '+pg+' ---\n':'')+pt;pending--;setFS(20+Math.round((np-pending)/np*40),'PDF: דף '+pg+'/'+np);if(pending===0){if(allText.trim().length>30){showRaw(allText);setTimeout(function(){processText(allText);},100);}else tryOCRonPDF(ab);}}).catch(function(){pending--;if(pending===0&&allText.length>30){showRaw(allText);processText(allText);}else if(pending===0)tryOCRonPDF(ab);});}).catch(function(){pending--;if(pending===0)tryOCRonPDF(ab);});})(i);}}).catch(function(){_azExtractPDFAsync(ab).then(function(t){if(t&&t.trim().length>30){showRaw(t);processText(t);}else tryOCRonPDF(ab);}).catch(function(){tryOCRonPDF(ab);});});}
+function extractPDFraw(ab){var bytes=new Uint8Array(ab);var s='',chunk=32768;for(var i=0;i<bytes.length;i+=chunk)s+=String.fromCharCode.apply(null,bytes.subarray(i,Math.min(i+chunk,bytes.length)));var out=[];var btRe=/BT([\s\S]*?)ET/g,bm;while((bm=btRe.exec(s))!==null){var blk=bm[1];var tjRe=/\(([^)]*)\)\s*Tj/g,tj;while((tj=tjRe.exec(blk))!==null){var v=tj[1].replace(/\\n/g,' ').replace(/\\r/g,'').replace(/\\\(/g,'(').replace(/\\\)/g,')').trim();if(v)out.push(v);}var taRe=/\[([\s\S]*?)\]\s*TJ/g,ta;while((ta=taRe.exec(blk))!==null){var inner=ta[1],parts=[],pRe=/\(([^)]*)\)/g,pm;while((pm=pRe.exec(inner))!==null)parts.push(pm[1]);var joined=parts.join('').replace(/\\\(/g,'(').replace(/\\\)/g,')').trim();if(joined)out.push(joined);}}return out.join('\n');}
+async function _azExtractPDFAsync(arrayBuffer){function latin1(buf){var s='',chunk=32768;for(var i=0;i<buf.length;i+=chunk)s+=String.fromCharCode.apply(null,buf.subarray(i,Math.min(i+chunk,buf.length)));return s;}function parseBTBlocks(str){var out=[];var btRe=/BT([\s\S]*?)ET/g,bm;while((bm=btRe.exec(str))!==null){var block=bm[1];var tjRe=/\(([^)]*)\)\s*Tj/g,tj;while((tj=tjRe.exec(block))!==null){var sv=tj[1].split('\\n').join(' ').split('\\r').join('').split('\\(').join('(').split('\\)').join(')').split('\\\\').join('\\').trim();if(sv)out.push(sv);}var tjARe=/\[([\s\S]*?)\]\s*TJ/g,ta;while((ta=tjARe.exec(block))!==null){var inner=ta[1],parts=[],pRe=/\(([^)]*)\)/g,pm;while((pm=pRe.exec(inner))!==null)parts.push(pm[1]);var joined=parts.join('').split('\\(').join('(').split('\\)').join(')').split('\\\\').join('\\').trim();if(joined)out.push(joined);}}return out;}async function inflate(bytes){for(var fmt of['deflate-raw','deflate']){try{var ds=new DecompressionStream(fmt);var writer=ds.writable.getWriter();var reader=ds.readable.getReader();writer.write(bytes);writer.close();var chunks=[];while(true){var r=await reader.read();if(r.done)break;chunks.push(r.value);}var total=chunks.reduce(function(a,c){return a+c.length;},0);var out=new Uint8Array(total);var off=0;chunks.forEach(function(c){out.set(c,off);off+=c.length;});return out;}catch(e){}}return bytes;}var bytes=new Uint8Array(arrayBuffer);var raw=latin1(bytes);var allLines=[];var pageObjRe=/(\d+)\s+\d+\s+obj[\s\S]*?\/Type\s*\/Page\b([\s\S]*?)endobj/g,pageMatch;var pageContentRefs=[];while((pageMatch=pageObjRe.exec(raw))!==null){var objBody=pageMatch[2];var contMatch=objBody.match(/\/Contents\s*(?:\[([^\]]*)\]|(\d+)\s+\d+\s+R)/);if(contMatch){var refs=[];if(contMatch[1]){var refRe=/(\d+)\s+\d+\s+R/g,rm;while((rm=refRe.exec(contMatch[1]))!==null)refs.push(parseInt(rm[1]));}else if(contMatch[2])refs.push(parseInt(contMatch[2]));pageContentRefs.push(refs);}}var objOffsets={};var objRe=/(\d+)\s+0\s+obj/g,om;while((om=objRe.exec(raw))!==null){var id2=parseInt(om[1]);if(!objOffsets[id2])objOffsets[id2]=om.index;}async function extractStream(objId){var offset=objOffsets[objId];if(offset==null)return null;var objChunk=raw.slice(offset,offset+200000);var streamStart=objChunk.indexOf('stream');if(streamStart<0)return null;var dataStart=streamStart+6;if(objChunk[dataStart]==='\r')dataStart++;if(objChunk[dataStart]==='\n')dataStart++;var endStream=objChunk.indexOf('\nendstream',dataStart);if(endStream<0)endStream=objChunk.indexOf('\rendstream',dataStart);if(endStream<0)return null;var streamStr=objChunk.slice(dataStart,endStream);var streamBytes=new Uint8Array(streamStr.length);for(var i=0;i<streamStr.length;i++)streamBytes[i]=streamStr.charCodeAt(i)&0xff;var hdr=objChunk.slice(0,streamStart);if(/FlateDecode/.test(hdr)||/Fl\b/.test(hdr))streamBytes=await inflate(streamBytes);return latin1(streamBytes);}if(pageContentRefs.length>0){for(var p=0;p<pageContentRefs.length;p++){var pageTokens=[];for(var ci=0;ci<pageContentRefs[p].length;ci++){var text2=await extractStream(pageContentRefs[p][ci]);if(text2&&/BT[\s\S]{1,100}(Tj|TJ)/.test(text2))pageTokens=pageTokens.concat(parseBTBlocks(text2));}if(pageTokens.length){allLines=allLines.concat(['--- PAGE '+(p+1)+' ---'],pageTokens);}}}if(allLines.length===0){var streamRe2=/stream[\r\n]([\s\S]*?)[\r\n]endstream/g,sm;while((sm=streamRe2.exec(raw))!==null){var sd=sm[1];var sb=new Uint8Array(sd.length);for(var i=0;i<sd.length;i++)sb[i]=sd.charCodeAt(i)&0xff;var decomp=await inflate(sb);var t2=latin1(decomp);if(/BT[\s\S]{1,100}(Tj|TJ)/.test(t2))allLines=allLines.concat(parseBTBlocks(t2));}}return allLines.join('\n');}
+function tryOCRonPDF(ab){var hasOCR=M.ocrReady||M.trocrReady;if(!hasOCR){setFS(100,'לא ניתן לקרוא — הורד Tesseract');document.getElementById('btn-run').disabled=false;notif('הורד OCR בהגדרות','warn');return;}setFS(35,'ממיר PDF לתמונה...');if(M.pdfReady&&typeof pdfjsLib!=='undefined'){pdfjsLib.getDocument({data:ab}).promise.then(function(doc){doc.getPage(1).then(function(page){var sc=2,vp=page.getViewport({scale:sc});var cv=document.createElement('canvas'),ctx=cv.getContext('2d');cv.width=vp.width;cv.height=vp.height;page.render({canvasContext:ctx,viewport:vp}).promise.then(function(){runSmartOCR(cv.toDataURL('image/png'));});});}).catch(function(){setFS(100,'PDF לא ניתן לעיבוד');document.getElementById('btn-run').disabled=false;});}else{setFS(100,'נדרש PDF.js');document.getElementById('btn-run').disabled=false;}}
+function extractImg(dataUrl){if(!M.ocrReady&&!M.trocrReady){notif('אין OCR פעיל','warn');document.getElementById('btn-run').disabled=false;return;}runSmartOCR(dataUrl);}
+var _OCR_MIN_CHARS=80,_OCR_MIN_CONF=55;
+async function runSmartOCR(imgUrl){setFS(40,'OCR: בדיקת מודלים...');var tesseractResult=null,tesseractConf=0;if(M.ocrReady&&typeof Tesseract!=='undefined'){setFS(42,'Tesseract OCR...');try{var result=await new Promise(function(resolve,reject){Tesseract.recognize(imgUrl,'eng',{logger:function(m){if(m.status==='recognizing text')setFS(42+Math.round(m.progress*25),'Tesseract: '+Math.round(m.progress*100)+'%');}}).then(resolve).catch(reject);});tesseractResult=result.data.text||'';tesseractConf=result.data.confidence||0;var mc=(tesseractResult.match(/[A-Z0-9\-\/\.]/g)||[]).length;setFS(68,'Tesseract: '+tesseractConf.toFixed(0)+'% conf');if(mc>=_OCR_MIN_CHARS&&tesseractConf>=_OCR_MIN_CONF){setFS(85,'✓ Tesseract OK');showRaw(tesseractResult);setTimeout(function(){processText(tesseractResult);},80);return;}}catch(e){setFS(68,'Tesseract נכשל');}}var activePipe=M.trocrReady?M.trocrPipe:null;if(activePipe){setFS(72,'TrOCR...');try{var safeUrl=await _prepareImageForTrOCR(imgUrl);var tr=await activePipe(safeUrl);var trocrText=(tr&&tr[0]&&tr[0].generated_text)||'';var finalText=_mergeOCRResults(tesseractResult,trocrText);showRaw(finalText);setTimeout(function(){processText(finalText);},80);return;}catch(e){if(tesseractResult&&tesseractResult.trim().length>10){showRaw(tesseractResult);setTimeout(function(){processText(tesseractResult);},80);return;}}}if(tesseractResult&&tesseractResult.trim().length>10){setFS(95,'Tesseract partial');showRaw(tesseractResult);setTimeout(function(){processText(tesseractResult);},80);}else{setFS(100,'זיהוי נכשל');document.getElementById('btn-run').disabled=false;}}
+async function _prepareImageForTrOCR(dataUrl){return new Promise(function(resolve){var img=new Image();img.onload=function(){var maxW=1600,maxH=1200;if(img.width<=maxW&&img.height<=maxH){resolve(dataUrl);return;}var scale=Math.min(maxW/img.width,maxH/img.height);var cv=document.createElement('canvas');cv.width=Math.round(img.width*scale);cv.height=Math.round(img.height*scale);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);resolve(cv.toDataURL('image/jpeg',0.92));};img.onerror=function(){resolve(dataUrl);};img.src=dataUrl;});}
+function _mergeOCRResults(tesseract,trocr){if(!tesseract||!tesseract.trim())return trocr||'';if(!trocr||!trocr.trim())return tesseract;function score(t){var e=(t.match(/[A-Z0-9]{3,}[\-\/\.][A-Z0-9]+/g)||[]).length*3;var n=(t.match(/\b\d{2,4}\b/g)||[]).length;var k=(t.match(/\b(RED|BLU|VIO|WHT|BLK|GRN|AWG|BOM|REV|DWG|ITEM|FAN|PC|MT|EA)\b/gi)||[]).length*2;return e+n+k+t.replace(/\s/g,'').length*0.01;}var sT=score(tesseract),sR=score(trocr);if(sT>sR*1.4)return tesseract;if(sR>sT*1.4)return trocr;return trocr+'\n\n--- Tesseract supplement ---\n'+tesseract;}
+function showRaw(text){document.getElementById('raw-panel').style.display='block';document.getElementById('raw-txt').textContent=text.slice(0,6000);document.getElementById('raw-badge').textContent=text.length+' תווים';}
+
+// ══════════════════════════════════════════════
+//  HARNESSPRO v4 ENGINE (same as v13, trimmed)
+// ══════════════════════════════════════════════
+var _PN_DB={'CWT-9001':{d:'Open Barrel Splice 22AWG Clear 26mm',c:'SPLICE'},'CWT-9002':{d:'Open Barrel Splice 16AWG Red 42mm',c:'SPLICE'},'CWT-9003':{d:'Open Barrel Splice 14AWG Yellow 34mm',c:'SPLICE'},'ATUM-12/4-0':{d:'Heatshrink Tubing With Glue 12:4mm Black',c:'HEATSHRINK'},'ATUM 9/3-0':{d:'Heatshrink Tubing With Glue 9:3mm Black',c:'HEATSHRINK'},'ATUM-19/6-0':{d:'Heatshrink Tubing With Glue 19:6mm Black',c:'HEATSHRINK'},'AMS-R-3X-6.4-9':{d:'Heatshrink Tube 6.4mm White',c:'HEATSHRINK'},'AMS-R-3X-9.5-9':{d:'Heatshrink Tube 9.5mm White',c:'HEATSHRINK'},'SE25PFR-TRO':{d:'Expandable Sleeving 6.4mm Black',c:'SLEEVING'},'VERSAFLEX-03-0-SP':{d:'Expandable Sleeving 3.2mm Black',c:'SLEEVING'},'VERSAFLEX-06-0-SP':{d:'Expandable Sleeving 6.4mm Black',c:'SLEEVING'},'22TE1934-7':{d:'Wire TEFLON 22AWG 600V Violet',c:'WIRE'},'55A0111-22-0':{d:'Wire TEFLON 22AWG 600V Black',c:'WIRE'},'55A0111-22-2':{d:'Wire TEFLON 22AWG 600V Red',c:'WIRE'},'55A0111-22-6':{d:'Wire TEFLON 22AWG 600V Blue',c:'WIRE'},'55A0111-22-7':{d:'Wire TEFLON 22AWG 600V Violet',c:'WIRE'},'55A0111-22-9':{d:'Wire TEFLON 22AWG 600V White',c:'WIRE'},'2616/19UL-0':{d:'Wire TEFLON 16AWG 600V Black',c:'WIRE'},'2616/19UL-2':{d:'Wire TEFLON 16AWG 600V Red',c:'WIRE'},'1722536112':{d:'Socket Contact Gold 20-22AWG',c:'CONTACT'},'1722563104':{d:'Rectangular Connector Housing 4POS',c:'CONNECTOR'},'4118N/2H8P':{d:'Fan Tubeaxial 48VDC 119mm 4-Wire',c:'COMPONENT'},'DTM04-4P':{d:'Deutsch DT 4-Pin Receptacle',c:'CONNECTOR'},'DTM06-4S':{d:'Deutsch DT 4-Pin Plug',c:'CONNECTOR'},'D38999/26WB35PN':{d:'MIL-DTL-38999 13P Plug Male',c:'CONNECTOR'},'D38999/24WB35PN':{d:'MIL-DTL-38999 13P Receptacle Female',c:'CONNECTOR'},'M85049-38-11W':{d:'Cable Clamp Size 11',c:'MATERIAL'},'171692-0104':{d:'Molex MEGA-FIT 4P Receptacle',c:'CONNECTOR'},'76823-0321':{d:'Molex MEGA-FIT Pin 14-16AWG',c:'CONTACT'},'1060-20-0222':{d:'Molex Pin 16-22AWG',c:'CONTACT'},'1496820000':{d:'KWN-M6 Lug Terminal Ring M6',c:'TERMINAL'},'M85049/1-20W':{d:'Backshell Straight MIL-C-85049',c:'MATERIAL'}};
+var _HP_SKIP={ITEM:1,'P/N':1,DESCRIPTION:1,Qty:1,UN:1,DATE:1,NAME:1,SIGNATURE:1,DRAWN:1,APPROVED:1,REV:1,'REV:':1,OF:1,COMPANY:1,PROJECT:1,TITLE:1,SIZE:1,'SIZE:':1,STANDARD:1,ROHS:1,'ECO No':1,Tolerance:1};
+var _HP_UNITS={PC:1,MT:1,EA:1,M:1,LF:1,PCS:1,SET:1,KG:1,GR:1};
+var _HP_COL_FULL={RED:'RED',BLU:'BLUE',BLUE:'BLUE',VIO:'VIOLET',VIOLET:'VIOLET',WHT:'WHITE',WHITE:'WHITE',BLK:'BLACK',BLACK:'BLACK',GRN:'GREEN',GREEN:'GREEN',YEL:'YELLOW',YELLOW:'YELLOW',ORG:'ORANGE',ORANGE:'ORANGE',ORN:'ORANGE',BRN:'BROWN',BROWN:'BROWN',GRY:'GREY',GREY:'GREY',GRAY:'GREY',PNK:'PINK',PINK:'PINK'};
+var _HP_COL_SUFFIX={'0':'BLACK','1':'BROWN','2':'RED','3':'ORANGE','4':'YELLOW','5':'GREEN','6':'BLUE','7':'VIOLET','8':'GREY','9':'WHITE'};
+var _HP_SIGNAL_RE=/^(48VDC|48V_RTN|48V_OUT|CTRL[\s(]?PWM[)]?|CTRL|TACHO|GND|VCC|24V_CHARGE|24V_CHARGE_RTN|24V_RTN|24V_OUT|CANH|CANL|SHIELD|PWR|RTN|SIG\d*|VP\+|VN|TEMP|IN\d*|OUT\d*|PWM|TACH)$/i;
+var _HP_COLOR_RE=/^(RED|BLU|BLUE|VIO|VIOLET|WHT|WHITE|BLK|BLACK|GRN|GREEN|YEL|YELLOW|ORG|ORN|ORANGE|BRN|BROWN|GRY|GREY|GRAY|PNK|PINK|SHIELD|BARE)$/i;
+var _HP_CONN_RE=/^(FAN|JX\s*\d*|J\d+|P\d+|U\d+\/[A-Z]\d+\/[A-Z]\d+|U\d+\/[A-Z]+\d*|BAT\d+\/[A-Z]+\d*)$/;
+function _hpCat(desc,pn){var d=(desc||'').toLowerCase(),p=(pn||'').toLowerCase();if(/wire|teflon|cable/.test(d))return 'WIRE';if(/contact|crimp|socket/.test(d))return 'CONTACT';if(/connector|receptacle|housing|plug|rcpt/.test(d))return 'CONNECTOR';if(/fan|motor|blower/.test(d))return 'COMPONENT';if(/terminal|lug|ring.*ter/.test(d))return 'TERMINAL';if(/shrink|tubing/.test(d)||/atum/.test(p))return 'HEATSHRINK';if(/sleev|expan|versaflex/.test(d))return 'SLEEVING';if(/splice|barrel/.test(d)||/^cwt/.test(p))return 'SPLICE';if(/label|tag/.test(d))return 'LABEL';if(/clamp|boot|backshell|gland/.test(d))return 'MATERIAL';return 'MATERIAL';}
+function _hpColorFromPN(pn){var m=pn.match(/[-\/](\d)$/);if(m)return _HP_COL_SUFFIX[m[1]]||'';if(/22TE.*-7$/.test(pn))return 'VIOLET';return '';}
+function _hpWirePN(color,bom){for(var i=0;i<bom.length;i++){var it=bom[i];if(it.category==='WIRE'&&(it.desc||'').toUpperCase().indexOf((color||'').toUpperCase())>=0)return it.pn;}var sfx={RED:'2',BLUE:'6',BLU:'6',VIOLET:'7',VIO:'7',WHITE:'9',WHT:'9',BLACK:'0',BLK:'0'};var s=sfx[(color||'').toUpperCase()];if(s)return '55A0111-22-'+s;if((color||'').toUpperCase()==='VIOLET')return '22TE1934-7';return '';}
+function _hpWireAWG(color,bom){for(var i=0;i<bom.length;i++){var it=bom[i];if(it.category==='WIRE'&&(it.desc||'').toUpperCase().indexOf((color||'').toUpperCase())>=0){var m=(it.desc||'').match(/(\d+)\s*AWG/i);if(m)return m[1]+'AWG';}}return '22AWG';}
+
+function _hpRunAnalysis(text){
+  var tokens=text.split('\n').map(function(l){return l.replace(/\\\//g,'/').replace(/\\#/g,'#').replace(/\\"/g,'"').trim();}).filter(Boolean);
+  var r={drawingNo:'',rev:'',title:'',company:'',date:'',drawn:'',approved:'',pn:'',tolerance:'',size:'',cableLength:0,bom:[],wires:[],connectors:[],labels:[],conflicts:[]};
+  var lines=text.split(/[\n\r]+/);
+  for(var i=0;i<tokens.length;i++){var t=tokens[i];if(/^\d{2}[A-Z]-[A-Z0-9]+-\d+/.test(t)&&!r.drawingNo){r.drawingNo=t;r.pn=t;}if(/^[0-9]{1,3}[A-Z]-[A-Z0-9]+-[0-9]+$/.test(t)&&!r.drawingNo){r.drawingNo=t;r.pn=t;}if(/^\d{2}\.\d{2}\.\d{2,4}$/.test(t)&&!r.date){r.date=t;if(i>0&&/^[A-Z ]{1,5}$/.test(tokens[i-1])&&!_HP_SKIP[tokens[i-1]])r.drawn=tokens[i-1];if(i>1&&/^[A-Z]{1,4}$/.test(tokens[i-2])&&!_HP_SKIP[tokens[i-2]]&&tokens[i-2]!==r.drawn)r.approved=tokens[i-2];}if(/^[A-Z][A-Z\s\&\/\-]{10,60}$/.test(t)&&!r.title&&!_HP_SKIP[t]&&!/^(DRAWING|COMPANY|PROJECT|DESCRIPTION|CONNECTION|BATTERY|FAN|WIRE|CABLE|ITEM|NOTE)$/.test(t))r.title=t;if(/^(AMPHENOL|AMP|AIR|MOLEX|TE|DEUTSCH|MIL)$/.test(t)&&!r.company)r.company=t;if(/^A[0-4]$/.test(t)&&!r.size)r.size=t;if(/^\d{3,4}$/.test(t)){var vv=parseInt(t);if(vv>=100&&vv<=5000&&!r.cableLength)r.cableLength=vv;}}
+  if(!r.drawingNo){var dm=text.match(/\b([0-9]{1,3}[A-Z]-[A-Z0-9]+-\d{2,6}(?:-\d{2})?)\b/);if(dm)r.drawingNo=dm[1];}
+  if(!r.drawingNo){var dm2=text.match(/Drawing\s+Number\s*\n([A-Z0-9][A-Z0-9\-]{3,20})/i);if(dm2)r.drawingNo=dm2[1].trim();}
+  if(!r.rev){var rv=text.match(/REV[:\s]+([A-Z0-9])\b/i);if(rv&&rv[1].toUpperCase()!=='N')r.rev=rv[1].toUpperCase();}
+  if(!r.date){var dt=text.match(/(\d{2}[.\-\/]\d{2}[.\-\/]\d{2,4})/);if(dt)r.date=dt[1];}
+  if(!r.company){var co=text.match(/\b(Amphenol(?:\s+Tel-Ad)?)\b/i);if(co)r.company=co[1];}
+  if(r.cableLength)r.tolerance='0-100 ±5mm, 101-500 ±10mm, 501-1500 ±20mm, 1501+ ±25mm';
+  var bom=[],bi=0;
+  while(bi<tokens.length){var tok=tokens[bi];if(_HP_SKIP[tok]||/^(publication|provided|may not|Tolerance:|0-100|101-500|501-1500|1501|ECO No|RoHS|ROHS|Amphenol)/.test(tok)){bi++;continue;}if(/^\d{1,2}$/.test(tok)&&parseInt(tok)<=30&&parseInt(tok)>=1){var itemNum=parseInt(tok);bi++;if(bi>=tokens.length)break;var pn=tokens[bi].replace(/\\\//g,'/').replace(/\\#/g,'#');if(pn.length<3||_HP_SKIP[pn]||/^[0-9\-\+±]+\s*(MM|mm)$/.test(pn)||pn==='O L'){bi++;continue;}bi++;var dParts=[],qty=0,unit='';while(bi<tokens.length){var t2=tokens[bi];if(/^[\d\.]+$/.test(t2)&&bi+1<tokens.length&&_HP_UNITS[tokens[bi+1].toUpperCase()]){qty=parseFloat(t2);unit=tokens[bi+1].toUpperCase();bi+=2;break;}if(/^\d{1,2}$/.test(t2)&&parseInt(t2)<=30&&parseInt(t2)===itemNum+1){if(!dParts.length){qty=1;unit='PC';}break;}if(_HP_SKIP[t2]||/^(Connection Area|Connection Points|RED|BLU|VIO|WHT|GRN|BLK|FAN|JX|\d{4}$)/.test(t2))break;if(/^[\d\.]+$/.test(t2)&&dParts.length>0){bi++;continue;}if(t2&&!/^(DRAW|APR|APPROVED|DRAWN|SIGNATURE)$/.test(t2))dParts.push(t2);bi++;}var rawDesc=dParts.join(' ').trim().replace(/\s+[\d\.]+\s*$/,'').trim();var db=_PN_DB[pn];var fDesc=rawDesc,fCat='';if(db){if(!fDesc||fDesc.length<8||/^[\d\.]+$/.test(fDesc)||/^(MT|PC|EA)$/.test(fDesc))fDesc=db.d;fCat=db.c;}if(!fCat)fCat=_hpCat(fDesc,pn);if(fCat==='WIRE'&&/^[\d\.]+\s*(MT)?$/.test(fDesc)){var cl2=_hpColorFromPN(pn);if(cl2)fDesc='Wire TEFLON 22AWG 600V '+cl2;}fDesc=fDesc.replace(/\s+[\d\.]+\s*$/,'').trim();var exists=bom.some(function(x){return x.item===itemNum;});if(!exists&&pn.length>=3&&itemNum>=1)bom.push({item:itemNum,pn:pn,desc:fDesc||pn,qty:qty||1,unit:unit||'PC',category:fCat});}else{var inlineM=tok.match(/^(\d{1,3})\s+([\w\-\/.()]{3,40})\s+(.{5,80}?)\s{2,}(\d+(?:\.\d+)?)\s+(PC|MT|EA|KG|M|SET|METER|PCS|RL|FT)\b/i);if(inlineM&&parseInt(inlineM[1])>=1&&parseInt(inlineM[1])<=100&&!bom.some(function(x){return x.item===parseInt(inlineM[1]);})){var iNum=parseInt(inlineM[1]);var ipn=inlineM[2].trim(),idesc=inlineM[3].trim(),iqty=inlineM[4],iunit=inlineM[5].toUpperCase();var idb=_PN_DB[ipn];var iDesc=idesc,iCat='';if(idb){if(!iDesc||iDesc.length<5)iDesc=idb.d;iCat=idb.c;}if(!iCat)iCat=_hpCat(iDesc,ipn);bom.push({item:iNum,pn:ipn,desc:iDesc,qty:iqty,unit:iunit,category:iCat});}bi++;}}
+  r.bom=bom.sort(function(a,b){return a.item-b.item;});
+  var caStart=-1,caEnd=tokens.length;
+  for(var i=0;i<tokens.length;i++){if((tokens[i]==='Connection Area'||tokens[i]==='CONNECTION AREA')&&caStart<0)caStart=i;if((tokens[i]==='Connection Points'||tokens[i]==='CONNECTION POINTS')&&caStart>=0){caEnd=i;break;}}
+  var ca=caStart>=0?tokens.slice(caStart,caEnd):tokens;
+  var colorSeq=[],sigSeq=[],connLabels=[];
+  for(var i=0;i<ca.length;i++){var t3=ca[i];if(_HP_COLOR_RE.test(t3)){var c3=_HP_COL_FULL[t3.toUpperCase()]||t3.toUpperCase();if(colorSeq.indexOf(c3)<0)colorSeq.push(c3);}if(_HP_CONN_RE.test(t3.trim())&&connLabels.indexOf(t3.trim())<0)connLabels.push(t3.trim());var tu=t3.replace(/\s/g,'_').toUpperCase();if(_HP_SIGNAL_RE.test(tu)&&sigSeq.indexOf(tu)<0)sigSeq.push(tu);if(/^CTRL$/i.test(t3)&&i+1<ca.length&&/\(?PWM\)?/i.test(ca[i+1])){if(sigSeq.indexOf('CTRL(PWM)')<0)sigSeq.push('CTRL(PWM)');}}
+  sigSeq=sigSeq.filter(function(s){return s!=='CTRL';});
+  var hasPWM=sigSeq.some(function(s){return/CTRL|PWM/.test(s);});
+  if(colorSeq.indexOf('VIOLET')>=0&&!hasPWM){var vi=colorSeq.indexOf('VIOLET');sigSeq.splice(vi,0,'CTRL(PWM)');}
+  while(sigSeq.length<colorSeq.length)sigSeq.push('');
+  var clen3=r.cableLength||0;
+  var conns3=connLabels.length>=2?[connLabels[0],connLabels[1]]:connLabels.length===1?[connLabels[0],'P2']:['P1','P2'];
+  if(colorSeq.length===0){r.wiring=_engcoreWiringFallback(text,r);r.connectors=buildConnectors(r.wiring);}
+  else{var wires3=[];for(var wi=0;wi<colorSeq.length;wi++){var color3=colorSeq[wi],signal3=sigSeq[wi]||'';wires3.push({id:wi+1,fromConn:conns3[0],fromPin:String(wi+1),toConn:conns3[1],toPin:String(wi+1),signal:signal3,spec:_hpWireAWG(color3,bom),color:color3,pn:_hpWirePN(color3,bom),cutLength:clen3,status:'OK',page:1,conflictNote:''});}r.wiring=wires3;}
+  var lbls=[];var seen={};var lre=/\b(Lb\d+[\.\-]\d+)\b/g,lm;while((lm=lre.exec(text))!==null){var lid=lm[1];if(seen[lid])continue;seen[lid]=true;var ctx2=text.slice(Math.max(0,lm.index-5),lm.index+200);var cM2=ctx2.match(/\b([A-Z][A-Za-z0-9]+)\b/);var conn2=cM2?cM2[0]:'';lbls.push({id:lid,connector:conn2,pn:'',labelText:lid+(conn2?' | '+conn2:'')});}
+  if(r.drawingNo&&!lbls.length)lbls.push({id:r.drawingNo,connector:'',pn:'',labelText:r.drawingNo});
+  r.labels=lbls;
+  r.conflicts=detectConflicts(r.bom,r.wiring);
+  return r;
+}
+
+function _engcoreWiringFallback(text,r){var id=1,page=1,wires=[];var COLORS_RE='RED|BLK|WHT|GRN|BLU|YEL|ORN|VIO|GRY|SHIELD|BARE|BRN|PNK';var connRe2=/\b([A-Z][A-Z0-9]*\d+\/[A-Z]{1,3}\d*|[A-Z]{2,5}\d+\/[A-Z]{1,3}\d*|BAT\d+\/[A-Z]+\d*|J[A-Z]?\d+|JX\s*\d*|FAN)\b/g;var connSet2={};var cm2;while((cm2=connRe2.exec(text))!==null)connSet2[cm2[1].replace(/\s+/,'')]=(connSet2[cm2[1].replace(/\s+/,'')]||0)+1;var knownConns2=Object.keys(connSet2).filter(function(k){return connSet2[k]>=1&&k.length>=2;});var linesF=text.split(/[\n\r]+/);var lastFrom2='',lastTo2='',connLine2=null,pinA2=1,pinB2=1;linesF.forEach(function(l){l=l.trim();if(!l)return;var refs2=[];knownConns2.forEach(function(c){if(l.indexOf(c)>=0)refs2.push(c);});if(refs2.length>=2){connLine2=refs2;lastFrom2=refs2[0];lastTo2=refs2[1];pinA2=1;pinB2=1;return;}var wm2=l.match(new RegExp('^([A-Z][A-Z0-9_+/\\-]{1,30})\\s+('+COLORS_RE+')$','i'));if(!wm2)wm2=l.match(new RegExp('^('+COLORS_RE+')\\s+([A-Z][A-Z0-9_+/\\-]{1,30})$','i'));if(wm2&&lastFrom2){var sig2=wm2[1],col2=nc(wm2[2]);if(col2==='?'||CNORM[wm2[1].toUpperCase()]){sig2=wm2[2];col2=nc(wm2[1]);}var toConns2=connLine2&&connLine2.length>1?connLine2.slice(1):[lastTo2];toConns2.forEach(function(tc){wires.push({id:id++,fromConn:lastFrom2,fromPin:String(pinA2),toConn:tc,toPin:String(pinB2),signal:sig2,spec:'#22',color:col2,status:'OK',page:page,conflictNote:'',cutLength:r.cableLength||0});});pinA2++;pinB2++;}});if(!wires.length){var caM=text.match(/Connection\s+(?:Area|Points?)?([\s\S]{0,800})/i);if(caM){var ca2=caM[1];var cols2=[],cre2=new RegExp('\\b('+COLORS_RE+')\\b','gi'),cm3;while((cm3=cre2.exec(ca2))!==null)cols2.push(nc(cm3[1]));if(cols2.length>4)cols2=cols2.slice(0,Math.floor(cols2.length/2));var sigs2=[],sm2=ca2.match(/\b(48VDC|48V_RTN|CTRL|PWM|TACHO|GND|VCC|VP\+|VN|[A-Z][A-Z0-9_]{2,20})\b/g)||[];sm2.forEach(function(s){if(!/^(RED|BLU|VIO|WHT|GRN|BLK|YEL|ORN|GRY|BRN|PNK|AWG|PC|MT|REV|DATE)$/i.test(s))sigs2.push(s);});var connM2=ca2.match(/\b([A-Z][A-Z0-9]*(?:\/[A-Z]{1,3}\d*)?)\b\s+\b([A-Z][A-Z0-9]*(?:\/[A-Z]{1,3}\d*)?)\b/);var fConn='J1',tConn='JX';if(connM2){fConn=connM2[1];tConn=connM2[2];}var specM2=ca2.match(/(\d{2})#/);var spec2=specM2?'#'+specM2[1]:'#22';var len2=Math.max(cols2.length,sigs2.length);for(var wi2=0;wi2<len2;wi2++){wires.push({id:id++,fromConn:fConn,fromPin:String(wi2+1),toConn:tConn,toPin:String(wi2+1),signal:sigs2[wi2]||'',spec:spec2,color:cols2[wi2]||'',status:'OK',page:page,conflictNote:'',cutLength:r.cableLength||0});}}}return wires;}
+function buildConnectors(wires){var seen={};var conns=[];wires.forEach(function(w){[w.fromConn,w.toConn].forEach(function(ref){if(ref&&ref!=='?'&&!seen[ref]){seen[ref]=true;var pins=wires.filter(function(x){return x.fromConn===ref||x.toConn===ref;}).length;conns.push({ref:ref,pins:pins,pn:'',location:ref.split('/')[0]});}});});return conns.sort(function(a,b){return a.ref.localeCompare(b.ref);});}
+function detectConflicts(bom,wires){var conflicts=[];var pns={};bom.forEach(function(b){pns[b.pn]=(pns[b.pn]||0)+1;});Object.keys(pns).forEach(function(pn){if(pns[pn]>1)conflicts.push({type:'dup',desc:'כפילות P/N: '+pn+' (×'+pns[pn]+')',sev:'danger'});});wires.forEach(function(w){if(w.color==='RED'&&/minus|neg|rtn|return|_rtn/i.test(w.signal)&&!/plus|pos/i.test(w.signal))conflicts.push({type:'pol',desc:'⚡ RED על אות שלילי: '+w.signal+' (חוט '+w.id+')',sev:'warn'});if((w.color==='BLACK'||w.color==='BLK')&&/\bplus\b|\bpos\b|_out\b|_pwr|48VDC|24V_OUT/i.test(w.signal)&&!/rtn|minus|neg/i.test(w.signal))conflicts.push({type:'pol',desc:'⚡ BLACK על אות חיובי: '+w.signal+' (חוט '+w.id+')',sev:'warn'});});wires.forEach(function(w){var cn=conflicts.filter(function(c){return c.desc.indexOf('חוט '+w.id)>=0;});if(cn.length){w.status='CONFLICT';w.conflictNote=cn.map(function(c){return c.desc;}).join(' | ');}});return conflicts;}
+
+function processText(text){
+  setFS(65,'HarnessPro v4: מנתח...');
+  CUR.rawText=text;
+  setTimeout(function(){
+    try{
+      var r=_hpRunAnalysis(text);
+      CUR.project={drawingNo:r.drawingNo,rev:r.rev,title:r.title,company:r.company,date:r.date,drawn:r.drawn,approved:r.approved,pn:r.pn,cableLength:r.cableLength,tolerance:r.tolerance};
+      CUR.bom=r.bom;
+      CUR.wiring=r.wiring;
+      CUR.connectors=buildConnectors(r.wiring);
+      CUR.labels=r.labels;
+      CUR.conflicts=r.conflicts;
+      ALL_WIRES=r.wiring.slice();
+
+      // ── NEW v14: Notes + Balloons + CutList ──
+      CUR.notes    = extractNotes(text);
+      CUR.balloons = matchBalloonsWithBOM(extractBalloons(text), CUR.bom);
+
+      setFS(90,'מרנדר תוצאות...');
+      renderResults();
+      calcStdTime();
+      document.getElementById('btn-run').disabled=false;
+      updateSugs();
+      if(CUR.bom.length||CUR.wiring.length){
+        var s='שרטוט: '+(CUR.project.drawingNo||CUR.fileName)+' | BOM: '+CUR.bom.length+' | חוטים: '+CUR.wiring.length+' | מחברים: '+CUR.connectors.map(function(c){return c.ref;}).join(', ');
+        vAdd('ניתוח '+(CUR.project.drawingNo||CUR.fileName),s,['harness',CUR.project.drawingNo||''],'harness');
+      }
+      setFS(100,'✓ ניתוח הושלם');
+      notif('ניתוח הושלם — '+CUR.wiring.length+' חוטים, '+CUR.bom.length+' BOM'+(CUR.conflicts.length?' | ⚠ '+CUR.conflicts.length+' קונפ\'':'')+(CUR.notes.length?' | '+CUR.notes.length+' הערות':''),CUR.conflicts.length?'warn':'ok');
+    }catch(e){setFS(100,'שגיאת ניתוח: '+e.message);document.getElementById('btn-run').disabled=false;console.error(e);}
+  },80);
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function renderResults(){
+  document.getElementById('results').style.display='block';
+  var p=CUR.project;
+  var tbFields=[];
+  if(p.drawingNo)tbFields.push(['Drawing No.',p.drawingNo,true]);
+  if(p.pn&&p.pn!==p.drawingNo)tbFields.push(['Part No.',p.pn,true]);
+  if(p.title)tbFields.push(['Title',p.title.slice(0,60),false]);
+  if(p.rev)tbFields.push(['Revision',p.rev,false]);
+  if(p.date)tbFields.push(['Date',p.date,false]);
+  if(p.company)tbFields.push(['Company',p.company,false]);
+  if(p.drawn)tbFields.push(['Drawn',p.drawn,false]);
+  if(p.approved)tbFields.push(['Approved',p.approved,false]);
+  if(p.cableLength)tbFields.push(['Cable Length',p.cableLength+'mm',false]);
+  if(p.tolerance)tbFields.push(['Tolerance',p.tolerance,false]);
+  document.getElementById('tb-grid').innerHTML=tbFields.length?tbFields.map(function(f){return'<div class="tb-field"><div class="tb-label">'+escH(f[0])+'</div><div class="tb-value'+(f[2]?' mono':'')+'">'+escH(f[1])+'</div></div>';}).join(''):'<div class="tb-field" style="grid-column:1/-1"><div class="tb-label">מצב</div><div class="tb-value" style="color:var(--txt3)">לא זוהה Title Block</div></div>';
+
+  var chips='';
+  chips+='<span class="chip ch-blue">'+CUR.wiring.length+' חוטים</span>';
+  chips+='<span class="chip ch-purple">'+CUR.bom.length+' BOM</span>';
+  chips+='<span class="chip ch-green">'+CUR.connectors.length+' מחברים</span>';
+  if(CUR.balloons.length)chips+='<span class="chip ch-orange">🎈 '+CUR.balloons.length+' בלונים</span>';
+  if(CUR.notes.length)chips+='<span class="chip ch-amber">📋 '+CUR.notes.length+' הערות</span>';
+  if(p.cableLength)chips+='<span class="chip ch-amber">'+p.cableLength+'mm</span>';
+  if(CUR.conflicts.length)chips+='<span class="chip ch-red">'+CUR.conflicts.length+' קונפליקטים</span>';
+  chips+='<span class="chip ch-grey">HarnessPro v4</span>';
+  document.getElementById('tb-chips').innerHTML=chips;
+
+  // Notes
+  renderNotes(CUR.notes);
+
+  // Balloons
+  renderBalloons(CUR.balloons);
+
+  // Conflicts
+  if(CUR.conflicts.length){document.getElementById('conflict-zone').style.display='block';document.getElementById('cf-cnt').textContent=CUR.conflicts.length;document.getElementById('cf-body').innerHTML=CUR.conflicts.map(function(c){return'<div class="conf-item"><div class="conf-title">'+escH(c.desc)+'</div></div>';}).join('');document.getElementById('chat-pip').classList.add('show');}
+
+  // BOM (with balloon indicators)
+  document.getElementById('bom-cnt').textContent=CUR.bom.length;
+  renderBOMwithBalloons(CUR.bom, CUR.balloons);
+
+  // Wiring
+  document.getElementById('wire-cnt').textContent=CUR.wiring.length;
+  renderWireTable(CUR.wiring);
+  var sel=document.getElementById('wf-conn');sel.innerHTML='<option value="">כל המחברים</option>';
+  var connSet={};ALL_WIRES.forEach(function(w){if(w.fromConn&&w.fromConn!=='?')connSet[w.fromConn]=1;if(w.toConn&&w.toConn!=='?')connSet[w.toConn]=1;});Object.keys(connSet).sort().forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+
+  // Cut List (new)
+  renderCutList(ALL_WIRES);
+
+  // Connectors
+  document.getElementById('conn-cnt').textContent=CUR.connectors.length;
+  document.getElementById('conn-tb').innerHTML=CUR.connectors.length?CUR.connectors.map(function(c){return'<tr><td style="font-weight:700;color:var(--cyan2)">'+escH(c.ref)+'</td><td>'+c.pins+'P</td><td>'+escH(c.pn)+'</td><td class="rtl">'+escH(c.location)+'</td></tr>';}).join(''):'<tr><td colspan="4" class="empty">לא זוהו מחברים</td></tr>';
+
+  // Labels
+  document.getElementById('lbl-cnt').textContent=CUR.labels.length;
+  document.getElementById('lbl-grid').innerHTML=CUR.labels.length?CUR.labels.map(function(lb){return'<div class="lbl-card" onclick="copyLabel(this,\''+escAttr(lb.labelText)+'\')"><div class="lbl-id">'+escH(lb.id)+'</div><div class="lbl-main">'+escH(lb.connector||lb.id)+'</div></div>';}).join(''):'<div class="empty">לא זוהו לייבלים</div>';
+}
+
+function renderWireTable(wires){
+  document.getElementById('wire-tb').innerHTML=wires.length?wires.map(function(w){var dotColor=CDOT[w.color]||CDOT[(w.color||'').split(' ')[0]]||'#9ca3af';var st=w.status==='OK'?'<span class="t-ok">✓</span>':w.status==='CONFLICT'?'<span class="t-red" title="'+escH(w.conflictNote||'')+'">⚠</span>':'<span class="t-warn">→</span>';return'<tr title="'+escH(w.conflictNote||'')+'"><td style="color:var(--txt3);font-size:0.7rem">'+w.id+'</td><td style="font-weight:700;color:var(--amber)">'+escH(w.fromConn||'')+'</td><td>'+escH(w.fromPin||'')+'</td><td style="font-weight:700;color:var(--green)">'+escH(w.toConn||'')+'</td><td>'+escH(w.toPin||'')+'</td><td style="font-weight:600;color:var(--purple)">'+escH(w.signal||'')+'</td><td>'+escH(w.spec||w.awg||'')+'</td><td><span class="wdot" style="background:'+dotColor+'"></span>'+escH(w.color||'')+'</td><td>'+st+'</td></tr>';}).join(''):'<tr><td colspan="9" class="empty">לא חולצו חוטים</td></tr>';}
+function filterWires(){var q=document.getElementById('wf').value.toLowerCase();var conn=document.getElementById('wf-conn').value;renderWireTable(ALL_WIRES.filter(function(w){if(conn&&w.fromConn!==conn&&w.toConn!==conn)return false;if(q&&((w.fromConn||'')+(w.fromPin||'')+(w.toConn||'')+(w.toPin||'')+(w.signal||'')+(w.spec||'')+(w.color||'')).toLowerCase().indexOf(q)<0)return false;return true;}));}
+function filterConflictsOnly(){var cf=ALL_WIRES.filter(function(w){return w.status==='CONFLICT';});renderWireTable(cf.length?cf:ALL_WIRES);if(!cf.length)notif('אין קונפליקטים ✓','ok');}
+
+// ══════════════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════════════
+function expCSV(type){
+  var rows=[],h=[],fn='';
+  if(type==='bom'){h=['ITEM','P/N','DESCRIPTION','QTY','UNIT','CAT','BALLOON'];rows=CUR.bom.map(function(b){var bal=CUR.balloons.find(function(x){return x.num===b.item;});return[b.item,b.pn,b.desc,b.qty,b.unit,b.category,bal?'✓':''];});fn='BOM';}
+  else if(type==='wire'){h=['ID','FROM','FROM_PIN','TO','TO_PIN','SIGNAL','SPEC','COLOR','STATUS','CUT_LENGTH'];rows=ALL_WIRES.map(function(w){return[w.id,w.fromConn,w.fromPin,w.toConn,w.toPin,w.signal,w.spec||w.awg,w.color,w.status,w.cutLength||''];});fn='Wiring';}
+  else if(type==='conn'){h=['REF','PINS','P/N','LOCATION'];rows=CUR.connectors.map(function(c){return[c.ref,c.pins,c.pn,c.location];});fn='Connectors';}
+  else if(type==='labels'){h=['ID','CONNECTOR','P/N','LABEL'];rows=CUR.labels.map(function(l){return[l.id,l.connector,l.pn,l.labelText];});fn='Labels';}
+  else if(type==='cutlist'){h=['#','COLOR','SIGNAL','FROM','TO','AWG','LENGTH_MM','QTY','TOTAL_MM'];var cuts=buildCutList(ALL_WIRES);rows=cuts.map(function(c){return[c.idx,c.color,c.signal,c.fromConn,c.toConn,c.spec,c.len||0,c.qty,c.total||0];});fn='CutList';}
+  else if(type==='stdtime'){h=['תחנה','פעולה','יחידה','ערך (דק\')','כמות','סה"כ (דק\')'];var n=ALL_WIRES.length;STD_DEFAULTS.forEach(function(d){var val=_stdTimes[d.id]||d.val;var isFixed=/קבוע/.test(d.unit);var qty=isFixed?1:/×2/.test(d.unit)?n*2:n;rows.push([d.station,d.name,d.unit,val,qty,(val*qty).toFixed(1)]);});fn='StandardTime';}
+  if(!rows.length){notif('אין נתונים','warn');return;}
+  var csv='\uFEFF'+[h].concat(rows).map(function(r){return r.map(function(v){var s=String(v||'');return(s.indexOf(',')>=0||s.indexOf('"')>=0)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',');}).join('\n');
+  dlBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),(CUR.project.drawingNo||'harness')+'_'+fn+'.csv');
+  notif('יוצא '+fn+' CSV','ok');
+}
+
+function exportAll(){
+  var p=CUR.project;
+  var css='body{font-family:system-ui,sans-serif;font-size:13px;background:#f8fafc;color:#0f172a;margin:0;padding:24px}.header{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px}.hf{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px}.hf-l{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}.hf-v{font-size:14px;font-weight:700;color:#0f172a;font-family:monospace}h2{font-size:14px;font-weight:700;margin:20px 0 8px;color:#0284c7;border-bottom:2px solid #e0f2fe;padding-bottom:6px}table{border-collapse:collapse;width:100%;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07)}th{background:#f0f9ff;color:#475569;font-size:10px;text-transform:uppercase;padding:9px 12px;text-align:left;border-bottom:1px solid #e2e8f0}td{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-family:monospace;font-size:12px}.c-ok{background:#d1fae5;color:#065f46}.c-warn{background:#fef3c7;color:#92400e}.c-red{background:#fee2e2;color:#991b1b}.conf-item{background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:8px 12px;margin:4px 0;font-weight:600;color:#991b1b}.note-item{background:#fffbeb;border-right:3px solid #f59e0b;padding:8px 12px;margin:4px 0;font-size:12px}';
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+(p.drawingNo||'Harness')+'</title><style>'+css+'</style></head><body>'+
+    '<div class="header">'+
+    (p.drawingNo?'<div class="hf"><div class="hf-l">Drawing No.</div><div class="hf-v">'+escH(p.drawingNo)+'</div></div>':'')+
+    (p.rev?'<div class="hf"><div class="hf-l">Rev</div><div class="hf-v">'+escH(p.rev)+'</div></div>':'')+
+    (p.title?'<div class="hf" style="grid-column:1/-1"><div class="hf-l">Title</div><div class="hf-v" style="font-family:inherit">'+escH(p.title)+'</div></div>':'')+
+    '</div>';
+  if(CUR.notes.length)html+='<h2>📋 הערות שרטוט ('+CUR.notes.length+')</h2>'+CUR.notes.map(function(n){return'<div class="note-item">'+escH(n.text)+'</div>';}).join('');
+  if(CUR.conflicts.length)html+='<h2>⚠ קונפליקטים</h2>'+CUR.conflicts.map(function(c){return'<div class="conf-item">'+escH(c.desc)+'</div>';}).join('');
+  if(CUR.balloons.length)html+='<h2>🎈 Balloons ('+CUR.balloons.length+')</h2><table><tr><th>בלון</th><th>P/N</th><th>תיאור</th><th>כמות</th><th>סטטוס</th></tr>'+CUR.balloons.map(function(b){return'<tr><td style="font-weight:700">'+b.num+'</td><td>'+escH(b.pn||'')+'</td><td>'+escH(b.desc||'')+'</td><td>'+b.qty+'</td><td class="'+(b.matched?'c-ok':'c-red')+'">'+(b.matched?'✓ מותאם':'✗ חסר')+'</td></tr>';}).join('')+'</table>';
+  html+='<h2>📦 BOM ('+CUR.bom.length+')</h2><table><tr><th>#</th><th>🎈</th><th>P/N</th><th>Description</th><th>Qty</th><th>Unit</th></tr>'+CUR.bom.map(function(b){var bal=CUR.balloons.find(function(x){return x.num===b.item;});return'<tr><td>'+b.item+'</td><td>'+(bal?'✓':'')+'</td><td style="font-weight:700">'+escH(b.pn)+'</td><td>'+escH(b.desc)+'</td><td>'+b.qty+'</td><td>'+escH(b.unit)+'</td></tr>';}).join('')+'</table>';
+  html+='<h2>⚡ Wiring ('+ALL_WIRES.length+')</h2><table><tr><th>#</th><th>FROM</th><th>PIN</th><th>TO</th><th>PIN</th><th>SIGNAL</th><th>SPEC</th><th>COLOR</th><th>STATUS</th></tr>'+ALL_WIRES.map(function(w){return'<tr><td>'+w.id+'</td><td style="font-weight:700">'+escH(w.fromConn||'')+'</td><td>'+escH(w.fromPin||'')+'</td><td style="font-weight:700">'+escH(w.toConn||'')+'</td><td>'+escH(w.toPin||'')+'</td><td>'+escH(w.signal||'')+'</td><td>'+escH(w.spec||'')+'</td><td>'+escH(w.color||'')+'</td><td class="'+(w.status==='OK'?'c-ok':w.status==='CONFLICT'?'c-red':'c-warn')+'">'+escH(w.status)+'</td></tr>';}).join('')+'</table>';
+  html+='<p style="margin-top:24px;font-size:10px;color:#94a3b8">Generated by ENGCORE v14 · HarnessPro Engine · '+new Date().toISOString()+'</p></body></html>';
+  dlBlob(new Blob([html],{type:'text/html;charset=utf-8'}),(p.drawingNo||'harness')+'_Report_v14.html');
+  notif('דוח HTML יוצא','ok');
+}
+
+function learnSect(type){var q='',a='';if(type==='bom'&&CUR.bom.length){q='BOM של '+(CUR.project.drawingNo||CUR.fileName);a=CUR.bom.map(function(b){return b.item+'. '+b.pn+' — '+b.desc+' ×'+b.qty+' '+b.unit;}).join('\n');}else if(type==='wire'&&ALL_WIRES.length){q='חיווט '+(CUR.project.drawingNo||CUR.fileName);a=ALL_WIRES.length+' חוטים:\n'+ALL_WIRES.slice(0,15).map(function(w){return w.fromConn+'/'+w.fromPin+'→'+w.toConn+'/'+w.toPin+' '+w.signal+' '+w.color;}).join('\n');}if(q&&a){vAdd(q,a,['harness',CUR.project.drawingNo||''],'harness');renderMemory();notif('נשמר','ok');}else notif('אין נתונים','warn');}
+function learnAll(){learnSect('bom');learnSect('wire');notif('הכל נשמר','ok');}
+function copyAllLabels(){var t=CUR.labels.map(function(l){return l.labelText;}).join('\n');if(!t){notif('אין לייבלים','warn');return;}navigator.clipboard.writeText(t).then(function(){showToast('הועתק ✓');}).catch(function(){notif('נכשל','warn');});}
+function copyLabel(el,txt){navigator.clipboard.writeText(txt).then(function(){showToast('הועתק ✓');el.style.borderColor='var(--green)';setTimeout(function(){el.style.borderColor='';},1200);});}
+function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1800);}
+
+// ══════════════════════════════════════════════
+//  CHAT
+// ══════════════════════════════════════════════
+var IEC_S=[0.5,0.75,1,1.5,2.5,4,6,10,16,25,35,50,70,95,120];
+var QUICK_PATS=[
+  {rx:/(\d+(?:[.,]\d+)?)\s*mm[2²]/i,fn:function(m){var v=parseFloat(m[1].replace(',','.'));var c=IEC_S.reduce(function(a,b){return Math.abs(b-v)<Math.abs(a-v)?b:a;});return v+' mm² — IEC קרוב: '+c+' mm²';}},
+  {rx:/(?:awg|#)\s*(\d+)/i,fn:function(m){var tbl={'10':5.26,'12':3.31,'14':2.08,'16':1.31,'18':0.82,'20':0.52,'22':0.33,'24':0.20,'26':0.13};var k=m[1];return'AWG '+k+': '+(tbl[k]||'?')+' mm²';}},
+  {rx:/(זמן תקן|standard time|כמה זמן)/i,fn:function(){if(!ALL_WIRES.length)return 'אין שרטוט פעיל. העלה שרטוט ועבור לטאב "זמן תקן".';var T=_stdTimes,n=ALL_WIRES.length;var fixed=(T.jig||0)+(T.hipot||0)+(T.visual||0)+(T.pack||0);var perWire=STD_DEFAULTS.filter(function(d){return!/קבוע/.test(d.unit);}).reduce(function(s,d){var v=_stdTimes[d.id]||d.val;return s+v*(/×2/.test(d.unit)?2:1);},0);var total=fixed+perWire*n;var hrs=Math.floor(total/60),mins=Math.round(total%60);return'**זמן ייצור מוערך:**\n'+n+' חוטים × '+perWire.toFixed(1)+' דק\' + קבוע '+fixed.toFixed(0)+' דק\'\n= '+(hrs?hrs+'h ':'')+mins+'m סה"כ\n\nניתן לערוך תקנים בטאב "זמן תקן".';}},
+  {rx:/(בלון|balloon)/i,fn:function(){if(!CUR.balloons.length)return 'לא זוהו בלונים בשרטוט. ודא שה-PDF מכיל BOM עם מספרי פריטים.';var m=CUR.balloons.filter(function(b){return b.matched;}).length;return'**בלונים: '+CUR.balloons.length+' זוהו**\n✓ מותאם: '+m+'\n✗ לא מותאם: '+(CUR.balloons.length-m);}},
+  {rx:/(הערות|notes)/i,fn:function(){if(!CUR.notes.length)return 'לא זוהו הערות בשרטוט זה.';return'**הערות שרטוט ('+CUR.notes.length+'):**\n'+CUR.notes.map(function(n,i){return(i+1)+'. '+n.text;}).join('\n');}},
+  {rx:/(minilm|ai|ocr|pdf|trocr|מודל)/i,fn:function(){return 'PDF.js: '+(M.pdfReady?'✓':'✗')+' | Tesseract: '+(M.ocrReady?'✓':'✗')+' | TrOCR: '+(M.trocrReady?'✓':'✗')+' | MiniLM: '+(M.mlReady?'✓':'✗')+'\nמנוע: HarnessPro v4 + Balloon + Notes + Standard Time';}},
+];
+function quickPat(q){for(var i=0;i<QUICK_PATS.length;i++){var m=q.match(QUICK_PATS[i].rx);if(m)return QUICK_PATS[i].fn(m);}return null;}
+function addBub(role,content,time,meta){var wrap=document.createElement('div');wrap.className='msg '+role;var av=document.createElement('div');av.className='avatar';av.textContent=role==='user'?'👤':role==='ai'?'EC':'✦';var bub=document.createElement('div');bub.className='bubble';bub.innerHTML=(role==='user'?escH(content):fmtAI(content))+(meta||'');var tm=document.createElement('div');tm.className='msg-time';tm.textContent=time;if(role==='user'){wrap.appendChild(bub);wrap.appendChild(av);}else{wrap.appendChild(av);wrap.appendChild(bub);}wrap.appendChild(tm);document.getElementById('chat-msgs').appendChild(wrap);}
+function fmtAI(t){return escH(t).replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+function scrollC(){var c=document.getElementById('chat-msgs');c.scrollTop=c.scrollHeight;}
+function loadChatHistory(){try{var h=JSON.parse(localStorage.getItem(CHAT_KEY)||'[]');chatHistory=h;h.forEach(function(m){if(m.role==='user')addBub('user',m.q||'',m.time||'');else if(m.role==='ai')addBub('ai',m.a||'',m.time||'');});scrollC();}catch(e){}}
+function saveCH(){try{localStorage.setItem(CHAT_KEY,JSON.stringify(chatHistory.slice(-50)));}catch(e){}}
+function bootGreet(){
+  var t=ts();
+  addBub('sys','🔒 ENGCORE v14 · HarnessPro Engine · Balloon + Notes + Standard Time · מקומי',t);
+  addBub('ai','שלום! אני ENGCORE v14.\n\n**מה חדש ב-v14:**\n• 🎈 Balloon Detection — זיהוי עיגולים + התאמה ל-BOM\n• 📋 חילוץ הערות שרטוט (Notes) לפי קטגוריה\n• ⏱ זמן תקן — טאב נפרד עם ערכים הניתנים לעריכה\n• ✂️ Cut List — פירוט חיתוך מקובץ לפי צבע/סיגנל\n• 📊 Excel מלא — 6 שיטים כולל זמן תקן\n\nהעלה שרטוט בטאב "שרטוט", ובדוק זמן ייצור בטאב "זמן תקן".',t);
+  scrollC();updateSugs();
+}
+function sendMsg(){
+  var ci=document.getElementById('ci');var q=ci.value.trim();if(!q)return;
+  var t=ts();addBub('user',q,t);chatHistory.push({role:'user',q:q,time:t});saveCH();ci.value='';autoR(ci);scrollC();
+  setTimeout(async function(){
+    var t2=ts();var pat=quickPat(q);if(pat){addBub('ai',pat,t2);chatHistory.push({role:'ai',a:pat,time:t2});saveCH();scrollC();updateSugs();return;}
+    var vault=vLoad();var res=await smartSearch(q,vault,3);var ans='';
+    if(res.length&&res[0].score>0.15){ans=res[0].item.a;}
+    else if(CUR.bom.length||CUR.wiring.length){
+      var ql=q.toLowerCase();
+      if(/bom|פריטים|חלקים/.test(ql)){ans='**BOM ('+CUR.bom.length+'):**\n'+CUR.bom.map(function(b){return b.item+'. '+b.pn+' — '+b.desc+' ×'+b.qty;}).join('\n');}
+      else if(/חוטים|חיווט|wiring/.test(ql)){ans='**חיווט ('+CUR.wiring.length+'):**\n'+ALL_WIRES.slice(0,10).map(function(w){return w.fromConn+'/'+w.fromPin+'→'+w.toConn+'/'+w.toPin+' '+w.signal+' '+w.color;}).join('\n')+(ALL_WIRES.length>10?'\n...ועוד '+(ALL_WIRES.length-10):'');}
+      else if(/מחבר|connector/.test(ql)){ans='**מחברים ('+CUR.connectors.length+'):**\n'+CUR.connectors.map(function(c){return c.ref+' — '+c.pins+'P';}).join('\n');}
+      else if(/קונפ|conflict/.test(ql)){ans=CUR.conflicts.length?'**קונפליקטים:**\n'+CUR.conflicts.map(function(c){return c.desc;}).join('\n'):'✓ אין קונפליקטים';}
+      else ans='נסה לשאול על: BOM, חיווט, מחברים, קונפליקטים, בלונים, הערות, או זמן תקן.';
+    }else{ans='אין שרטוט פעיל. העלה שרטוט בטאב "שרטוט".';}
+    addBub('ai',ans,t2);chatHistory.push({role:'ai',a:ans,time:t2});saveCH();scrollC();updateSugs();
+  },120);
+}
+function updateSugs(){
+  var sugs=[];
+  if(CUR.bom.length)sugs.push('הצג BOM','בלונים');
+  if(CUR.wiring.length)sugs.push('זמן תקן');
+  if(CUR.notes.length)sugs.push('הצג הערות');
+  if(!CUR.bom.length)sugs.push('AWG 22 בmm²','מה חדש ב-v14?');
+  document.getElementById('sugs-wrap').innerHTML=sugs.slice(0,4).map(function(s){return'<div class="sug" onclick="useSug(this)">'+escH(s)+'</div>';}).join('');
+}
+function useSug(el){var ci=document.getElementById('ci');ci.value=el.textContent;sendMsg();}
+function ckeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+function autoR(ta){ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,90)+'px';}
+
+function ensureBuiltIn(){
+  var items=vLoad();
+  if(!items.some(function(i){return i.source==='builtin_v14';})){
+    vAdd('AWG 22 בmm²','AWG 22 = 0.33 mm². IEC קרוב: 0.5 mm²',['AWG','IEC'],'builtin_v14');
+    vAdd('AWG 16 בmm²','AWG 16 = 1.31 mm². IEC קרוב: 1.5 mm²',['AWG','IEC'],'builtin_v14');
+    vAdd('MIL-DTL-38999','תקן מחברים צבאיים עגולים. Series I–IV. IP67-IP69K. נפוץ ב-aerospace.',['MIL','connector'],'builtin_v14');
+    vAdd('TEFLON 22AWG','חוט TEFLON 22AWG 600V. P/N Amphenol: 55A0111-22-X. עד 200°C+.',['wire','TEFLON','AWG'],'builtin_v14');
+    vAdd('Balloon Detection','ENGCORE v14 מזהה בלונים מ-PDF וקטורי (עיגולים עם מספרים) ומתאים לשורות BOM. מציג מותאם/לא מותאם.',['balloon','BOM'],'builtin_v14');
+    vAdd('זמן תקן','ניתן לערוך את ערכי התקן בטאב "זמן תקן". הכלי מחשב פירוט לפי תחנה (חיתוך/קרימפ/הרכבה/בדיקה) ומייצא ל-Excel.',['זמן תקן','ייצור'],'builtin_v14');
+    renderMemory();
+  }
+}
+
+// NAV & UTILS
+function goPage(tab){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});document.getElementById('p-'+tab).classList.add('on');document.getElementById('nav-'+tab).classList.add('on');if(tab==='mem'){renderMemory();updateVaultStats();updateModelStatusDetail();}if(tab==='chat'){scrollC();document.getElementById('chat-pip').classList.remove('show');}if(tab==='std'){calcStdTime();}}
+function toggleP(bid,tid){document.getElementById(bid).classList.toggle('open');document.getElementById(tid).classList.toggle('open');}
+function notif(msg,type){type=type||'info';var icons={info:'◈',warn:'⚠',danger:'✕',ok:'✓'};var el=document.createElement('div');el.className='notif n'+type[0];el.innerHTML='<span>'+icons[type]+'</span><span>'+escH(String(msg))+'</span>';var c=document.getElementById('nc');if(!c){console.log(msg);return;}c.insertBefore(el,c.firstChild);while(c.children.length>3)c.removeChild(c.lastChild);setTimeout(function(){try{if(el.parentNode)el.style.opacity='0.5';}catch(e){}},5500);}
+function dlBlob(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();}
+function escH(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escAttr(t){return escH(t).replace(/'/g,'&#39;');}
+function ts(){var t=new Date();return('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2);}
+</script>
+</body>
+</html>
