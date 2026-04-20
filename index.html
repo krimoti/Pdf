@@ -1562,52 +1562,7 @@ function dlBlob(blob,name){var a=document.createElement('a');a.href=URL.createOb
 function escH(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escAttr(t){return escH(t).replace(/'/g,'&#39;');}
 function ts(){var t=new Date();return('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2);}
-/**
- * פונקציה לסיכום כמויות ואורכי חוטים מכל הדפים
- * @param {Array} allPagesData - מערך נתונים שנשלפו מכל דפי ה-PDF
- */
-function calculateHarnessTotals(allPagesData) {
-    const totals = {};
 
-    allPagesData.forEach(page => {
-        // נניח שכל 'page' מכיל מערך של חוטים שנמצאו ב-OCR
-        page.wires.forEach(wire => {
-            const pn = wire.partNumber; // מק"ט החוט
-            const length = parseFloat(wire.length) || 0; // אורך
-            const quantity = parseInt(wire.quantity) || 1; // כמות (אם קיימת)
-
-            if (!totals[pn]) {
-                totals[pn] = {
-                    totalLength: 0,
-                    totalQuantity: 0,
-                    description: wire.description || ''
-                };
-            }
-
-            totals[pn].totalLength += (length * quantity);
-            totals[pn].totalQuantity += quantity;
-        });
-    });
-
-    displaySummaryReport(totals);
-}
-
-/**
- * הצגת התוצאה בממשק המשתמש (UI)
- */
-function displaySummaryReport(totals) {
-    console.log("--- דו\"ח ריכוז חוטים וכמויות ---");
-    let reportHTML = '<div class="summary-card"><h3>סיכום פרויקט כולל</h3><ul>';
-    
-    for (const [pn, data] of Object.entries(totals)) {
-        console.log(`מק"ט: ${pn} | אורך כולל: ${data.totalLength}mm | כמות: ${data.totalQuantity}`);
-        reportHTML += `<li><strong>${pn}</strong>: ${data.totalLength.toFixed(2)}mm (${data.totalQuantity} יחידות)</li>`;
-    }
-    
-    reportHTML += '</ul></div>';
-    // כאן תוכל להזריק את ה-HTML לאזור רלוונטי בדף (למשל תחת "מאגר ידע")
-    document.getElementById('summary-output').innerHTML = reportHTML;
-}
 
 </script>
 </body>
