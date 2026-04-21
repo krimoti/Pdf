@@ -1,1608 +1,1095 @@
 <!DOCTYPE html>
-
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>ENGCORE v16</title>
+<title>WES Smart Library</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap');
-:root{
-  --bg:#f0f4f8;--surface:#fff;--s2:#f8fafc;--border:#e2e8f0;--border2:#cbd5e1;
-  --txt:#0f172a;--txt2:#475569;--txt3:#94a3b8;
-  --cyan:#0ea5e9;--cyan2:#0284c7;--cyanL:#e0f2fe;--cyanLL:#f0f9ff;
-  --green:#10b981;--greenL:#d1fae5;
-  --amber:#f59e0b;--amberL:#fef3c7;
-  --red:#ef4444;--redL:#fee2e2;
-  --purple:#8b5cf6;--purpleL:#ede9fe;
-  --orange:#f97316;--orangeL:#fff7ed;
-  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.04);
-  --sh2:0 4px 24px rgba(14,165,233,.12);
-  --r:12px;--rsm:8px;
-  --sb:env(safe-area-inset-bottom,0px);
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #1a1a24;
+  --border: #2a2a3a;
+  --accent: #00d4ff;
+  --accent2: #7c3aed;
+  --green: #00e676;
+  --amber: #ffb300;
+  --red: #ff3d71;
+  --text: #e8e8f0;
+  --text-dim: #6b6b80;
+  --font-ui: 'Heebo', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --header-h: 52px;
+  --toolbar-h: 52px;
+  --results-h: 32vh;
+  --radius: 6px;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;height:100dvh;background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;overflow:hidden;direction:rtl}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-/* ── TOPBAR ── */
-#topbar{position:fixed;top:0;right:0;left:0;height:56px;background:var(–surface);border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:200;box-shadow:0 1px 0 var(–border)}
-.logo{font-family:‘Syne’,sans-serif;font-weight:800;font-size:1.2rem;color:var(–cyan2);display:flex;align-items:center;gap:8px;letter-spacing:-.02em}
-.logo-mark{width:26px;height:26px;background:var(–cyan2);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);box-shadow:0 0 10px rgba(14,165,233,.35);flex-shrink:0}
-.pills{display:flex;gap:4px;flex-wrap:wrap}
-.pill{display:flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:.6rem;font-weight:600;font-family:‘DM Mono’,monospace;border:1px solid var(–border);background:var(–s2);color:var(–txt3)}
-.pill.ok{background:var(–greenL);color:var(–green);border-color:#6ee7b7}
-.pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
-.pill.ok .pill-dot{animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── BNAV ── */
-#bnav{position:fixed;bottom:0;right:0;left:0;height:calc(60px + var(–sb));background:var(–surface);border-top:1px solid var(–border);display:flex;align-items:flex-start;padding-top:7px;z-index:200}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 0;color:var(–txt3);font-size:.58rem;font-weight:600;cursor:pointer;border:none;background:none;transition:color .15s;position:relative}
-.nb.on{color:var(–cyan2)}
-.nb svg{width:20px;height:20px;stroke-width:1.7}
-.nb-pip{position:absolute;top:1px;right:calc(50% - 14px);width:6px;height:6px;border-radius:50%;background:var(–red);display:none;border:1.5px solid var(–surface)}
-.nb-pip.show{display:block}
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: var(--header-h) var(--toolbar-h) 1fr var(--results-h);
+  overflow: hidden;
+  user-select: none;
+}
 
-/* ── PAGES ── */
-#app{position:fixed;top:56px;bottom:calc(60px + var(–sb));right:0;left:0;overflow:hidden}
-.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;padding:14px;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
-.page.on{display:flex}
+/* ══════════════════════ HEADER ══════════════════════ */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 12px;
+}
 
-/* ── CARDS ── */
-.card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);padding:14px;box-shadow:var(–sh)}
-.card-cyan{border-color:#bae6fd;background:var(–cyanLL)}
-.card-green{border-color:#6ee7b7;background:#f0fdf4}
-.card-amber{border-color:#fcd34d;background:#fffbeb}
-.card-red{border-color:#fca5a5;background:#fff5f5}
-.card-purple{border-color:#c4b5fd;background:var(–purpleL)}
-.slbl{font-family:‘DM Mono’,monospace;font-size:.6rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(–txt3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.slbl::after{content:’’;flex:1;height:1px;background:var(–border)}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand-logo {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+.brand-name {
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-/* ── FORM ── */
-input[type=text],input[type=number],input[type=password],select,textarea{width:100%;background:var(–s2);border:1px solid var(–border);color:var(–txt);font-family:‘DM Sans’,sans-serif;font-size:.88rem;padding:9px 12px;border-radius:var(–rsm);outline:none;-webkit-appearance:none;transition:border-color .15s,box-shadow .15s}
-input:focus,select:focus,textarea:focus{border-color:var(–cyan);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
-.field{margin-bottom:9px}
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+}
 
-/* ── BUTTONS ── */
-.btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 14px;border-radius:var(–rsm);font-family:‘DM Sans’,sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;border:none;transition:all .15s;width:100%;margin-bottom:7px;min-height:44px;touch-action:manipulation}
-.btn:active{transform:scale(.97)}
-.btn:disabled{opacity:.4;pointer-events:none}
-.btn-sm{padding:6px 11px;font-size:.75rem;min-height:32px;width:auto;margin-bottom:0}
-.btn-row{display:flex;gap:6px;flex-wrap:wrap}
-.bp{background:var(–cyan2);color:#fff;box-shadow:0 2px 8px rgba(2,132,199,.25)}
-.bo{background:transparent;color:var(–cyan2);border:1.5px solid var(–cyan)}
-.bg{background:var(–greenL);color:#065f46;border:1.5px solid #6ee7b7}
-.bw{background:var(–amberL);color:#92400e;border:1.5px solid #fcd34d}
-.bd{background:var(–redL);color:#991b1b;border:1.5px solid #fca5a5}
-.bpurple{background:var(–purpleL);color:#5b21b6;border:1.5px solid #c4b5fd}
-.borange{background:var(–orangeL);color:#c2410c;border:1.5px solid #fdba74}
+/* Page nav */
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 8px;
+}
+.page-btn {
+  background: none; border: none;
+  color: var(--text-dim); cursor: pointer;
+  font-size: 16px; line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.page-btn:hover:not(:disabled) { color: var(--accent); background: rgba(0,212,255,0.08); }
+.page-btn:disabled { opacity: 0.3; cursor: default; }
+.page-info {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  min-width: 60px;
+  text-align: center;
+}
 
-/* ── PROGRESS ── */
-.prog-track{height:5px;background:var(–border);border-radius:3px;overflow:hidden;margin:5px 0}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(–cyan),var(–green));border-radius:3px;transition:width .3s}
-.prog-lbl{font-family:‘DM Mono’,monospace;font-size:.62rem;color:var(–txt2);margin-top:3px}
+#status {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-ok { color: var(--green) !important; }
+.status-match { color: var(--accent) !important; }
+.status-err { color: var(--red) !important; }
 
-/* ── DROP ZONE ── */
-.dz{border:2px dashed var(–border2);border-radius:var(–r);padding:28px 14px;text-align:center;cursor:pointer;transition:all .2s;background:var(–surface)}
-.dz:hover,.dz.over{border-color:var(–cyan);background:var(–cyanLL);box-shadow:var(–sh2)}
-.dz-emoji{font-size:2.2rem;margin-bottom:8px}
-.dz-title{font-size:.95rem;font-weight:700;color:var(–txt2)}
-.dz-sub{font-size:.72rem;color:var(–txt3);margin-top:3px}
+/* ══════════════════════ TOOLBAR ══════════════════════ */
+.toolbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.toolbar::-webkit-scrollbar { display: none; }
 
-/* ── CHIPS ── */
-.chips{display:flex;gap:4px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:.63rem;font-weight:600;font-family:‘DM Mono’,monospace;white-space:nowrap}
-.ch-blue{background:var(–cyanL);color:var(–cyan2);border:1px solid #7dd3fc}
-.ch-green{background:var(–greenL);color:#065f46;border:1px solid #6ee7b7}
-.ch-amber{background:var(–amberL);color:#92400e;border:1px solid #fcd34d}
-.ch-red{background:var(–redL);color:#991b1b;border:1px solid #fca5a5}
-.ch-purple{background:var(–purpleL);color:#5b21b6;border:1px solid #c4b5fd}
-.ch-grey{background:var(–s2);color:var(–txt2);border:1px solid var(–border)}
-.ch-orange{background:var(–orangeL);color:#c2410c;border:1px solid #fdba74}
+.tb-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  flex-shrink: 0;
+}
 
-/* ── TABLE ── */
-.tbl-wrap{overflow-x:auto;border-radius:var(–rsm);border:1px solid var(–border);-webkit-overflow-scrolling:touch}
-table{border-collapse:collapse;min-width:100%}
-thead{position:sticky;top:0;z-index:5;background:var(–s2)}
-th{padding:9px 11px;text-align:right;color:var(–txt2);font-size:.64rem;letter-spacing:.05em;font-weight:600;border-bottom:1px solid var(–border);white-space:nowrap;font-family:‘DM Mono’,monospace}
-td{padding:8px 11px;border-bottom:1px solid var(–border);font-family:‘DM Mono’,monospace;font-size:.76rem;white-space:nowrap;direction:ltr;text-align:left}
-td.rtl{direction:rtl;text-align:right;font-family:‘DM Sans’,sans-serif;font-size:.82rem}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:var(–cyanLL)}
-.t-ok{color:var(–green);font-weight:600}
-.t-warn{color:var(–amber);font-weight:600}
-.t-red{color:var(–red);font-weight:600}
-.wdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:4px;vertical-align:middle;border:1.5px solid rgba(0,0,0,.12)}
+.btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 12px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  outline: none;
+}
+.btn-primary { background: var(--accent); color: #000; border-color: var(--accent); }
+.btn-primary:hover { background: #29dcff; }
+.btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-active { background: rgba(0,212,255,0.12); border-color: var(--accent); color: var(--accent); }
+.btn-green { background: var(--green); color: #000; border-color: var(--green); }
+.btn-green:hover { background: #29ff82; }
+.btn-danger { background: transparent; color: var(--red); border-color: var(--red); }
+.btn-danger:hover { background: rgba(255,61,113,0.1); }
 
-/* ── PANEL ── */
-.panel{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);overflow:hidden;box-shadow:var(–sh)}
-.ph{padding:11px 14px;background:var(–s2);border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;gap:7px}
-.ph-left{display:flex;align-items:center;gap:7px;font-size:.85rem;font-weight:700;color:var(–txt)}
-.ph-badge{font-family:‘DM Mono’,monospace;font-size:.58rem;padding:2px 7px;border-radius:10px;background:var(–cyanL);color:var(–cyan2)}
-.pb{display:none}.pb.open{display:block}
-.pt{color:var(–txt3);font-size:.78rem;transition:transform .2s}
-.pt.open{transform:rotate(180deg)}
+.btn-icon { font-size: 14px; }
 
-/* ── DL SCREEN ── */
-#dl-screen{position:fixed;inset:0;background:var(–bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;overflow-y:auto}
-.dl-logo{font-family:‘Syne’,sans-serif;font-weight:800;font-size:1.8rem;color:var(–cyan2);display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.dl-sub{font-size:.68rem;color:var(–txt3);font-family:‘DM Mono’,monospace;letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
-.dl-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r);padding:16px;width:100%;max-width:480px;box-shadow:var(–sh2)}
-.dl-title{font-size:.95rem;font-weight:700;color:var(–txt);margin-bottom:3px}
-.dl-hint{font-size:.7rem;color:var(–txt3);margin-bottom:12px;line-height:1.55}
+select {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+select:hover { border-color: var(--accent); }
 
-.dl-mod{border:1.5px solid var(–border);border-radius:var(–rsm);padding:11px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px;user-select:none;margin-bottom:7px}
-.dl-mod.selected{border-color:var(–cyan);background:var(–cyanLL)}
-.dl-mod.disabled{opacity:.45;pointer-events:none}
-.dl-mod-chk{width:19px;height:19px;border-radius:4px;border:2px solid var(–border2);background:var(–surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .15s;font-size:.75rem}
-.dl-mod.selected .dl-mod-chk{background:var(–cyan2);border-color:var(–cyan2);color:#fff}
-.dl-mod-name{font-weight:700;font-size:.84rem;color:var(–txt);margin-bottom:2px;display:flex;align-items:center;gap:6px}
-.dl-mod-desc{font-size:.7rem;color:var(–txt2);line-height:1.45;margin-bottom:4px}
-.dl-mod-tags{display:flex;gap:5px;flex-wrap:wrap}
-.dl-tag{font-size:.57rem;font-family:‘DM Mono’,monospace;padding:1px 6px;border-radius:8px;background:var(–s2);color:var(–txt3);border:1px solid var(–border)}
-.dl-tag.quality{background:var(–greenL);color:#065f46;border-color:#6ee7b7}
-.dl-tag.pro{background:var(–purpleL);color:#5b21b6;border-color:#c4b5fd}
-.dl-tag.new{background:var(–amberL);color:#92400e;border-color:#fcd34d}
-.dl-tag.size{background:var(–s2);color:var(–txt2);border-color:var(–border2)}
-.dl-note{margin-top:5px;font-size:.66rem;color:var(–txt2);background:var(–cyanLL);border:1px solid #bae6fd;padding:5px 8px;border-radius:6px;line-height:1.5}
+/* ══════════════════════ VIEWPORT ══════════════════════ */
+#viewport {
+  position: relative;
+  overflow: hidden;
+  background: #050508;
+  touch-action: none;
+  cursor: grab;
+  width: 100%;
+  height: 100%;
+}
+#viewport.marking { cursor: crosshair; }
+#viewport:active { cursor: grabbing; }
+#viewport.marking:active { cursor: crosshair; }
 
-.dl-progress{margin-bottom:10px;display:none}
-.dl-state{font-size:.68rem;font-family:‘DM Mono’,monospace;padding:1px 0}
-.dl-state.ok{color:var(–green)}.dl-state.err{color:var(–red)}.dl-state.pending{color:var(–amber)}
+#canvas-wrapper {
+  position: absolute;
+  transform-origin: 0 0;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+}
+#pdf-canvas { display: block; }
+#draw-layer {
+  position: absolute; top: 0; left: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+#draw-layer.marking { pointer-events: auto; }
 
-/* ── WIRE EDIT TABLE ── */
-.we-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.wet{border-collapse:collapse;min-width:100%}
-.wet th{padding:8px 10px;background:var(–s2);border-bottom:1px solid var(–border);font-family:‘DM Mono’,monospace;font-size:.61rem;color:var(–txt2);font-weight:600;white-space:nowrap;text-align:left}
-.wet td{padding:4px 6px;border-bottom:1px solid var(–border)}
-.wet tr:last-child td{border-bottom:none}
-.wet tr:hover td{background:var(–cyanLL)}
-.we-inp{width:68px;padding:4px 7px;font-size:.76rem;font-family:‘DM Mono’,monospace;text-align:center;background:var(–cyanLL);border:1px solid #bae6fd;border-radius:5px;color:var(–cyan2);font-weight:600}
-.we-inp.manual{background:var(–amberL);border-color:#fcd34d;color:#92400e}
-.we-inp.geo{background:var(–greenL);border-color:#6ee7b7;color:#065f46}
-.we-inp.vision{background:var(–purpleL);border-color:#c4b5fd;color:#5b21b6}
-.we-inp:focus{outline:none;box-shadow:0 0 0 2px rgba(14,165,233,.2)}
-.we-src{font-size:.54rem;font-family:‘DM Mono’,monospace;padding:1px 5px;border-radius:8px;font-weight:600}
-.src-geo{background:var(–greenL);color:#065f46}
-.src-vision{background:var(–purpleL);color:#5b21b6}
-.src-manual{background:var(–amberL);color:#92400e}
-.src-none{background:var(–s2);color:var(–txt3);border:1px solid var(–border)}
+/* Zoom indicator */
+#zoom-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
 
-/* ── PAGE BADGES ── */
-.page-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:var(–rsm);font-size:.7rem;font-family:‘DM Mono’,monospace;font-weight:600;margin:2px}
-.page-badge.geo{border:1px solid #6ee7b7;background:#f0fdf4;color:#065f46}
-.page-badge.table{border:1px solid #bae6fd;background:var(–cyanLL);color:var(–cyan2)}
-.page-badge.mixed{border:1px solid #fcd34d;background:#fffbeb;color:#92400e}
-.page-badge.title{border:1px solid #c4b5fd;background:var(–purpleL);color:#5b21b6}
-.page-badge.unknown{border:1px solid var(–border);background:var(–s2);color:var(–txt3)}
+/* Zones overlay labels */
+.zone-label {
+  position: absolute;
+  background: var(--accent2);
+  color: #fff;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 20;
+  white-space: nowrap;
+}
 
-/* ── VISION PANEL ── */
-.vision-hero{background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:var(–r);padding:16px;color:#fff}
-.vision-title{font-family:‘Syne’,sans-serif;font-weight:800;font-size:1.05rem;margin-bottom:3px}
-.vision-sub{font-size:.7rem;opacity:.7;margin-bottom:12px;line-height:1.5}
-.vision-key-row{display:flex;gap:7px;margin-bottom:10px}
-.vision-key-inp{flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-family:‘DM Mono’,monospace;font-size:.8rem;padding:8px 11px;border-radius:var(–rsm);outline:none}
-.vision-key-inp::placeholder{color:rgba(255,255,255,.4)}
-.vision-key-inp:focus{border-color:rgba(255,255,255,.5)}
-.vision-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 13px;border-radius:var(–rsm);cursor:pointer;font-size:.82rem;font-weight:600;white-space:nowrap;transition:all .15s}
-.vision-btn:hover{background:rgba(255,255,255,.25)}
-.vision-btn.running{opacity:.5;pointer-events:none}
-.vision-log{margin-top:7px;font-family:‘DM Mono’,monospace;font-size:.63rem;opacity:.7;max-height:80px;overflow-y:auto;line-height:1.7}
+/* ══════════════════════ RESULTS PANEL ══════════════════════ */
+.results-panel {
+  background: var(--surface);
+  border-top: 2px solid var(--accent);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-/* ── CUT LIST HERO ── */
-.cut-hero{background:linear-gradient(135deg,var(–cyan2),#0369a1);border-radius:var(–r);padding:14px;color:#fff;text-align:center}
-.cut-hero-lbl{font-size:.64rem;opacity:.75;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
-.cut-hero-val{font-family:‘Syne’,sans-serif;font-size:1.9rem;font-weight:800}
-.cut-hero-sub{font-size:.66rem;opacity:.6;margin-top:2px}
-.cut-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
-.cut-stat{background:var(–s2);border:1px solid var(–border);border-radius:var(–rsm);padding:8px;text-align:center}
-.cut-stat-v{font-family:‘Syne’,sans-serif;font-size:1rem;font-weight:700;color:var(–cyan2)}
-.cut-stat-l{font-size:.57rem;color:var(–txt3);margin-top:1px}
+.results-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.results-header::-webkit-scrollbar { display: none; }
 
-/* ── STD TIME ── */
-.std-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:8px 11px;border-bottom:1px solid var(–border);gap:7px;background:var(–surface)}
-.std-row:last-child{border-bottom:none}
-.std-row:nth-child(even){background:var(–s2)}
-.std-row-name{font-size:.8rem;font-weight:600;color:var(–txt)}
-.std-row-unit{font-size:.65rem;color:var(–txt3);font-family:‘DM Mono’,monospace;white-space:nowrap}
-.std-inp{width:65px;padding:4px 7px;font-size:.8rem;font-family:‘DM Mono’,monospace;text-align:center;background:var(–cyanLL);border:1px solid #bae6fd;border-radius:5px;color:var(–cyan2);font-weight:600}
-.std-inp:focus{border-color:var(–cyan);outline:none;box-shadow:0 0 0 2px rgba(14,165,233,.15)}
-.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
-.station-card{background:var(–s2);border:1px solid var(–border);border-radius:var(–rsm);padding:9px 11px;text-align:center}
-.station-name{font-size:.62rem;font-family:‘DM Mono’,monospace;color:var(–txt3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
-.station-time{font-family:‘Syne’,sans-serif;font-size:1.15rem;font-weight:700;color:var(–cyan2)}
-.time-hero{background:linear-gradient(135deg,var(–cyan2),#0369a1);border-radius:var(–r);padding:14px;text-align:center;color:#fff;margin-bottom:10px}
-.time-hero-lbl{font-size:.64rem;opacity:.75;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
-.time-hero-val{font-family:‘Syne’,sans-serif;font-size:2rem;font-weight:800}
+.tab-btn {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  background: rgba(0,212,255,0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tab-btn .tab-type {
+  font-size: 9px;
+  margin-right: 4px;
+  opacity: 0.7;
+}
 
-/* ── MEM ── */
-.mem-item{background:var(–surface);border:1px solid var(–border);border-radius:var(–rsm);padding:10px 13px;margin-bottom:7px;position:relative}
-.mem-del{position:absolute;left:8px;top:7px;background:none;border:none;color:var(–txt3);cursor:pointer;font-size:.85rem;padding:2px 6px;border-radius:4px}
-.mem-del:hover{background:var(–redL);color:var(–red)}
+.results-body {
+  flex: 1;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
 
-/* ── TOAST / NOTIF ── */
-#toast{position:fixed;bottom:calc(68px + var(–sb));left:50%;transform:translateX(-50%);background:var(–txt);color:#fff;font-size:.78rem;padding:7px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9999;white-space:nowrap}
-#toast.show{opacity:1}
-.notif{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(–rsm);font-size:.79rem;font-weight:600;margin-bottom:5px;animation:nin .2s ease}
-@keyframes nin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-.ninfo{background:var(–cyanL);color:var(–cyan2)}
-.nwarn{background:var(–amberL);color:#92400e}
-.ndanger{background:var(–redL);color:#991b1b}
-.nok{background:var(–greenL);color:#065f46}
-.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-.empty{text-align:center;color:var(–txt3);font-size:.77rem;padding:16px!important;direction:rtl}
+.results-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  color: var(--text-dim);
+}
+.results-placeholder .ph-icon { font-size: 28px; opacity: 0.3; }
+.results-placeholder p { font-size: 12px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+th {
+  background: var(--surface2);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  position: sticky; top: 0;
+  text-align: right;
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  z-index: 2;
+}
+td {
+  border: 1px solid var(--border);
+  padding: 7px 10px;
+  text-align: right;
+  color: var(--text);
+  transition: background 0.1s;
+}
+tr:hover td { background: rgba(255,255,255,0.03); }
+
+/* Drawing data card */
+.drawing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  padding: 0;
+}
+.drawing-cell {
+  background: var(--surface);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.drawing-cell .dc-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+.drawing-cell .dc-value {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Export bar */
+.export-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  min-height: 36px;
+}
+.export-bar span {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  margin-left: auto;
+}
+
+/* ══════════════════════ MODAL - Zone Type Selection ══════════════════════ */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  width: min(360px, 90vw);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  transform: translateY(16px);
+  transition: transform 0.2s;
+  direction: rtl;
+}
+.modal-backdrop.open .modal { transform: translateY(0); }
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.modal-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+}
+
+.zone-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.zone-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--surface2);
+  transition: all 0.15s;
+  text-align: right;
+}
+.zone-option:hover { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.zone-option.selected { border-color: var(--accent); background: rgba(0,212,255,0.1); }
+
+.zone-option-icon {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.icon-bom { background: rgba(0,230,118,0.15); }
+.icon-fromto { background: rgba(124,58,237,0.15); }
+.icon-drawing { background: rgba(255,179,0,0.15); }
+
+.zone-option-text { flex: 1; }
+.zone-option-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.zone-option-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ══════════════════════ TEMPLATE NAME MODAL ══════════════════════ */
+.input-group { margin-bottom: 16px; }
+.input-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+}
+.input-field {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-mono);
+  outline: none;
+  transition: border-color 0.15s;
+  direction: ltr;
+  text-align: left;
+}
+.input-field:focus { border-color: var(--accent); }
+
+/* Pulse animation for match */
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,255,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(0,212,255,0); }
+}
+.match-pulse { animation: pulse-border 1.5s ease 3; }
+
+/* Loading */
+.loading-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transform-origin: left;
+  animation: loading 1.5s ease-in-out infinite;
+  z-index: 30;
+}
+@keyframes loading {
+  0% { transform: scaleX(0); }
+  50% { transform: scaleX(0.7); }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* Resize handle */
+.resize-handle {
+  height: 4px;
+  background: var(--border);
+  cursor: ns-resize;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.resize-handle:hover { background: var(--accent); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 </style>
-
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     DOWNLOAD SCREEN
-════════════════════════════════════════ -->
-
-<div id="dl-screen">
-  <div class="dl-logo"><div class="logo-mark"></div>ENGCORE <span style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400;margin-right:3px">v16</span></div>
-  <div class="dl-sub">Wiring Diagram Analyzer · Multi-Page · Geo + Vision</div>
-
-  <div class="dl-card">
-    <div class="dl-title">⬇ בחר מודולים להורדה</div>
-    <div class="dl-hint">חד-פעמי — נשמר במטמון הדפדפן. Vision AI דורש מפתח API נפרד.</div>
-
-```
-<!-- PDF.js -->
-<div class="dl-mod selected" id="mod-pdfjs" onclick="toggleMod('pdfjs')">
-  <div class="dl-mod-chk" id="chk-pdfjs">✓</div>
-  <div style="flex:1">
-    <div class="dl-mod-name">📐 PDF.js — ניתוח גיאומטרי + טקסט</div>
-    <div class="dl-mod-desc">חילוץ טקסט + ניתוח operators גרפיים (קואורדינטות קווים). בסיס לכל הניתוח. ממליץ תמיד.</div>
-    <div class="dl-mod-tags"><span class="dl-tag size">~3 MB</span><span class="dl-tag quality">מהיר</span><span class="dl-tag quality">offline</span><span class="dl-tag quality">iPhone ✓</span></div>
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<header>
+  <div class="brand">
+    <div class="brand-logo">WES</div>
+    <span class="brand-name">SMART LIBRARY</span>
   </div>
-</div>
-
-<!-- Tesseract -->
-<div class="dl-mod selected" id="mod-ocr" onclick="toggleMod('ocr')">
-  <div class="dl-mod-chk" id="chk-ocr">✓</div>
-  <div style="flex:1">
-    <div class="dl-mod-name">📷 Tesseract OCR v5 — זיהוי תמונות</div>
-    <div class="dl-mod-desc">זיהוי טקסט מסריקות ו-PDF רסטרי. Fallback אוטומטי כש-PDF.js מחזיר פחות מ-30 תווים.</div>
-    <div class="dl-mod-tags"><span class="dl-tag size">~8 MB</span><span class="dl-tag quality">85% תמונות</span><span class="dl-tag quality">iPhone ✓</span></div>
-  </div>
-</div>
-
-<!-- TrOCR-small -->
-<div class="dl-mod" id="mod-trocr" onclick="toggleMod('trocr')">
-  <div class="dl-mod-chk" id="chk-trocr"></div>
-  <div style="flex:1">
-    <div class="dl-mod-name">🔬 TrOCR-small · Microsoft <span class="dl-tag new">חדש</span></div>
-    <div class="dl-mod-desc">Transformer OCR. מדויק יותר מ-Tesseract על P/N הנדסיים, מספרים קטנים, וטבלאות BOM.</div>
-    <div class="dl-mod-tags"><span class="dl-tag size">~45 MB</span><span class="dl-tag quality">92%+</span><span class="dl-tag quality">iPhone ✓</span></div>
-    <div class="dl-note">⚡ Pipeline חכם: Tesseract ראשון (מהיר). אם ביטחון נמוך — TrOCR משפר. iPhone ~8s.</div>
-  </div>
-</div>
-
-<!-- TrOCR-base -->
-<div class="dl-mod" id="mod-trocrbase" onclick="toggleMod('trocrbase')">
-  <div class="dl-mod-chk" id="chk-trocrbase"></div>
-  <div style="flex:1">
-    <div class="dl-mod-name">🧠 TrOCR-base · Microsoft <span class="dl-tag pro">Pro</span></div>
-    <div class="dl-mod-desc">גרסה חזקה יותר — ~95% דיוק על שרטוטים הנדסיים. מחליפה TrOCR-small. מתאים iPhone 13+.</div>
-    <div class="dl-mod-tags"><span class="dl-tag size">~250 MB</span><span class="dl-tag quality">~95%</span><span class="dl-tag quality">iPhone 13+</span></div>
-  </div>
-</div>
-
-<!-- MiniLM -->
-<div class="dl-mod" id="mod-minilm" onclick="toggleMod('minilm')">
-  <div class="dl-mod-chk" id="chk-minilm"></div>
-  <div style="flex:1">
-    <div class="dl-mod-name">💬 MiniLM — חיפוש סמנטי בזיכרון</div>
-    <div class="dl-mod-desc">Embedding model לחיפוש חכם בזיכרון. משפר התאמת שאלות הנדסיות לידע שנלמד.</div>
-    <div class="dl-mod-tags"><span class="dl-tag size">~23 MB</span><span class="dl-tag">חיפוש AI</span><span class="dl-tag">אופציונלי</span></div>
-  </div>
-</div>
-
-<!-- OpenCV.js -->
-<div class="dl-mod" id="mod-opencv" onclick="toggleMod('opencv')">
-  <div class="dl-mod-chk" id="chk-opencv"></div>
-  <div style="flex:1">
-    <div class="dl-mod-name">📏 OpenCV.js — זיהוי קווים גיאומטריים <span class="dl-tag new">חדש</span></div>
-    <div class="dl-mod-desc">Hough Line Transform לזיהוי קווי חוט בשרטוט גרפי. מחשב אורכים מפיקסלים לmm לפי קנה מידה.</div>
-    <div class="dl-mod-tags"><span class="dl-tag size">~8 MB</span><span class="dl-tag quality">זיהוי קווים</span><span class="dl-tag">WASM</span></div>
-    <div class="dl-note">🔧 דורש כיול קנה מידה ידני (מ"מ לפיקסל). עובד על PDF שהומר לתמונה.</div>
-  </div>
-</div>
-
-<!-- Progress -->
-<div class="dl-progress" id="dl-prog">
-  <div class="prog-track"><div class="prog-fill" id="dl-fill" style="width:0%"></div></div>
-  <div class="prog-lbl" id="dl-lbl">ממתין...</div>
-  <div id="dl-states" style="margin-top:6px;display:flex;flex-direction:column;gap:2px">
-    <div id="ds-pdfjs"     class="dl-state pending">PDF.js: ממתין</div>
-    <div id="ds-ocr"       class="dl-state pending">Tesseract: ממתין</div>
-    <div id="ds-trocr"     class="dl-state pending">TrOCR-small: ממתין</div>
-    <div id="ds-trocrbase" class="dl-state pending">TrOCR-base: ממתין</div>
-    <div id="ds-minilm"    class="dl-state pending">MiniLM: ממתין</div>
-    <div id="ds-opencv"    class="dl-state pending">OpenCV: ממתין</div>
-  </div>
-</div>
-
-<button class="btn bp" id="dl-btn" onclick="startDownload()">⬇&nbsp; הורד מודלים שנבחרו</button>
-<button class="btn" style="background:transparent;color:var(--txt3);border:1px solid var(--border);margin-bottom:0" onclick="skipDownload()">דלג — Parser בלבד (ללא OCR)</button>
-```
-
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════
-     TOPBAR
-════════════════════════════════════════ -->
-
-<div id="topbar" style="display:none">
-  <div class="logo"><div class="logo-mark"></div>ENGCORE <span style="font-family:'DM Mono',monospace;font-size:.48rem;color:var(--txt3);font-weight:400;margin-right:3px">v16</span></div>
-  <div class="pills">
-    <div class="pill" id="p-pdf"><div class="pill-dot"></div><span id="l-pdf">PDF</span></div>
-    <div class="pill" id="p-ocr"><div class="pill-dot"></div><span id="l-ocr">OCR</span></div>
-    <div class="pill" id="p-trocr"><div class="pill-dot"></div><span id="l-trocr">TrOCR</span></div>
-    <div class="pill" id="p-ml"><div class="pill-dot"></div><span id="l-ml">AI</span></div>
-    <div class="pill" id="p-cv"><div class="pill-dot"></div><span id="l-cv">CV</span></div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════
-     APP
-════════════════════════════════════════ -->
-
-<div id="app" style="display:none">
-
-  <!-- ── TAB: ניתוח ── -->
-
-  <div class="page on" id="p-ana">
-    <div class="dz" id="dz" onclick="document.getElementById('fi').click()"
-      ondragover="dzO(event)" ondragleave="dzL()" ondrop="dzDrop(event)">
-      <input type="file" id="fi" accept=".pdf,image/png,image/jpeg" style="display:none" onchange="onFile(event)">
-      <div class="dz-emoji">📋</div>
-      <div class="dz-title">העלה Wiring Diagram</div>
-      <div class="dz-sub">PDF (מומלץ — כל הדפים) · PNG · JPG · גרור או לחץ</div>
+  
+  <div class="header-center">
+    <div class="page-nav">
+      <button class="page-btn" id="prevPage" onclick="changePage(-1)" disabled>‹</button>
+      <span class="page-info" id="pageInfo">— / —</span>
+      <button class="page-btn" id="nextPage" onclick="changePage(1)" disabled>›</button>
     </div>
-
-```
-<div id="file-status" style="display:none">
-  <div class="card card-cyan">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <span style="font-size:1.3rem" id="fs-icon">📄</span>
-      <div style="flex:1">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;font-weight:600;color:var(--cyan2)" id="fs-name"></div>
-        <div style="font-size:.68rem;color:var(--txt3)" id="fs-meta"></div>
-      </div>
-      <button onclick="resetFile()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:1rem;padding:3px 8px;border-radius:5px">✕</button>
-    </div>
-    <div class="prog-track"><div class="prog-fill" id="fp" style="width:0%"></div></div>
-    <div class="prog-lbl" id="fs-lbl">ממתין לניתוח...</div>
-    <div id="page-badges" style="display:none;flex-wrap:wrap;gap:3px;margin-top:7px"></div>
-    <div id="nc" style="margin-top:6px"></div>
   </div>
-  <button class="btn bp" id="btn-run" onclick="runAnalysis()" style="margin-top:6px">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    נתח — כל הדפים
+  
+  <span id="status">טען שרטוט PDF...</span>
+</header>
+
+<!-- ══════════════════════ TOOLBAR ══════════════════════ -->
+<div class="toolbar">
+  <input type="file" id="pdfIn" hidden accept=".pdf" multiple>
+  <button class="btn btn-primary" onclick="document.getElementById('pdfIn').click()">
+    <span class="btn-icon">📂</span> טען PDF
+  </button>
+  
+  <div class="tb-sep"></div>
+  
+  <button id="modeBtn" class="btn btn-ghost" onclick="toggleMode()">
+    <span class="btn-icon">✋</span> ניווט
+  </button>
+  
+  <div class="tb-sep"></div>
+  
+  <select id="templateList" onchange="applySelectedTemplate()">
+    <option value="">תבנית...</option>
+  </select>
+  
+  <button class="btn btn-ghost" onclick="openSaveTemplateModal()" title="שמור תבנית">
+    <span class="btn-icon">💾</span> שמור
+  </button>
+  
+  <button class="btn btn-danger" onclick="deleteTemplate()" title="מחק תבנית">
+    <span class="btn-icon">🗑</span>
+  </button>
+  
+  <div class="tb-sep"></div>
+  
+  <button class="btn btn-ghost" onclick="resetView()" title="אפס תצוגה">
+    <span class="btn-icon">⊡</span>
+  </button>
+  
+  <button class="btn btn-green" onclick="extractCurrentZone()">
+    <span class="btn-icon">⚡</span> חלץ
   </button>
 </div>
 
-<div id="results" style="display:none">
-
-  <!-- Title Block -->
-  <div class="card card-cyan">
-    <div class="slbl">🏭 Title Block</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="tb-grid"></div>
-    <div class="chips" id="tb-chips" style="margin-top:7px"></div>
+<!-- ══════════════════════ VIEWPORT ══════════════════════ -->
+<div id="viewport">
+  <div id="canvas-wrapper" style="position:absolute;transform-origin:0 0;">
+    <canvas id="pdf-canvas" style="display:block;"></canvas>
+    <canvas id="draw-layer" style="position:absolute;top:0;left:0;pointer-events:none;"></canvas>
   </div>
-
-  <!-- Wire Edit Table -->
-  <div class="panel">
-    <div class="ph" onclick="toggleP('we-body','we-tog')">
-      <div class="ph-left">✏️ חוטים — עריכת אורכים <span class="ph-badge" id="we-cnt">0</span></div>
-      <div style="display:flex;align-items:center;gap:5px">
-        <div class="chips" id="src-legend" style="display:none">
-          <span class="chip ch-green" style="font-size:.52rem">🟢 גיאו</span>
-          <span class="chip ch-purple" style="font-size:.52rem">🟣 Vision</span>
-          <span class="chip ch-amber" style="font-size:.52rem">🟡 ידני</span>
-        </div>
-        <span class="pt open" id="we-tog">▼</span>
-      </div>
-    </div>
-    <div class="pb open" id="we-body">
-      <div style="padding:7px 9px;border-bottom:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;align-items:center">
-        <input type="text" id="we-filter" placeholder="סנן צבע / סיגנל..." style="flex:1;min-width:90px;padding:5px 9px;font-size:.76rem;margin-bottom:0" oninput="filterWireEdit()">
-        <button class="btn bo btn-sm" onclick="setAllLengths()">📏 אורך אחיד</button>
-        <button class="btn bw btn-sm" onclick="addWireRow()">+ הוסף חוט</button>
-      </div>
-      <div class="we-wrap">
-        <table class="wet">
-          <thead><tr><th>#</th><th>צבע</th><th>AWG</th><th>SIGNAL</th><th>FROM</th><th>TO</th><th>אורך mm</th><th>כמות</th><th>מקור</th><th>מחק</th></tr></thead>
-          <tbody id="we-tb"></tbody>
-        </table>
-      </div>
-      <div class="btn-row" style="padding:8px 9px">
-        <button class="btn bg btn-sm" onclick="expCSV('wire')">⬇ CSV</button>
-        <button class="btn borange btn-sm" onclick="expExcel()">📊 Excel</button>
-        <button class="btn bpurple btn-sm" onclick="goPage('cut')">✂️ Cut List</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOM -->
-  <div class="panel">
-    <div class="ph" onclick="toggleP('bom-body','bom-tog')">
-      <div class="ph-left">📦 BOM <span class="ph-badge" id="bom-cnt">0</span></div>
-      <span class="pt open" id="bom-tog">▼</span>
-    </div>
-    <div class="pb open" id="bom-body">
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>#</th><th>P/N</th><th>DESCRIPTION</th><th>QTY</th><th>UN</th><th>CAT</th></tr></thead>
-        <tbody id="bom-tb"></tbody>
-      </table></div>
-      <div class="btn-row" style="padding:8px"><button class="btn bg btn-sm" onclick="expCSV('bom')">⬇ CSV</button></div>
-    </div>
-  </div>
-
-  <!-- Connectors -->
-  <div class="panel">
-    <div class="ph" onclick="toggleP('conn-body','conn-tog')">
-      <div class="ph-left">🔌 מחברים <span class="ph-badge" id="conn-cnt">0</span></div>
-      <span class="pt" id="conn-tog">▼</span>
-    </div>
-    <div class="pb" id="conn-body">
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>REF</th><th>PINS</th><th>P/N</th></tr></thead>
-        <tbody id="conn-tb"></tbody>
-      </table></div>
-    </div>
-  </div>
-
-  <!-- Raw text -->
-  <div class="panel">
-    <div class="ph" onclick="toggleP('raw-body','raw-tog')">
-      <div class="ph-left">📝 טקסט גולמי <span class="ph-badge" id="raw-badge">0</span></div>
-      <span class="pt" id="raw-tog">▼</span>
-    </div>
-    <div class="pb" id="raw-body">
-      <div id="raw-txt" style="padding:10px;font-family:'DM Mono',monospace;font-size:.67rem;color:var(--txt2);direction:ltr;text-align:left;white-space:pre-wrap;max-height:200px;overflow-y:auto;background:var(--s2)"></div>
-    </div>
-  </div>
-
-  <div class="btn-row">
-    <button class="btn borange" style="flex:1;margin-bottom:0" onclick="expExcel()">📊 Excel מלא</button>
-    <button class="btn bpurple" style="flex:1;margin-bottom:0" onclick="goPage('vis')">🤖 Vision AI</button>
+  <div id="loading-bar" class="loading-bar" style="display:none"></div>
+  <div id="zoom-badge" style="position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,0.6);border:1px solid #2a2a3a;border-radius:4px;padding:3px 8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6b6b80;pointer-events:none;">100%</div>
+  <div id="drop-hint" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#6b6b80;">
+    <div style="font-size:48px;opacity:0.2;">📄</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;">טען קובץ PDF</div>
   </div>
 </div>
-```
 
+<!-- ══════════════════════ RESULTS PANEL ══════════════════════ -->
+<div class="results-panel" id="resultsPanel">
+  <div class="resize-handle" id="resizeHandle"></div>
+  
+  <div class="results-header" id="resultsHeader">
+    <span style="font-size:11px;color:var(--text-dim);font-family:var(--font-mono);white-space:nowrap">תוצאות:</span>
+    <div id="tabs"></div>
+    <div style="margin-right:auto"></div>
+    <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="exportCSV()">CSV ↓</button>
+    <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="copyTable()">העתק</button>
   </div>
-
-  <!-- ── TAB: Cut List ── -->
-
-  <div class="page" id="p-cut">
-    <div class="cut-hero">
-      <div class="cut-hero-lbl">סה"כ חוט לחיתוך</div>
-      <div class="cut-hero-val" id="cut-total-len">—</div>
-      <div class="cut-hero-sub" id="cut-total-sub">הזן אורכים בטאב "ניתוח"</div>
-    </div>
-    <div class="cut-stats" id="cut-stats"></div>
-    <div class="panel">
-      <div class="ph" onclick="toggleP('cut-body','cut-tog')">
-        <div class="ph-left">✂️ Cut List מקובץ <span class="ph-badge" id="cut-cnt">0</span></div>
-        <span class="pt open" id="cut-tog">▼</span>
-      </div>
-      <div class="pb open" id="cut-body">
-        <div class="tbl-wrap"><table>
-          <thead><tr><th>#</th><th>צבע</th><th>AWG</th><th>SIGNAL</th><th>FROM→TO</th><th>אורך mm</th><th>כמות</th><th>±TOL</th><th>סה"כ mm</th><th>מקור</th></tr></thead>
-          <tbody id="cut-tb"></tbody>
-        </table></div>
-        <div class="btn-row" style="padding:8px">
-          <button class="btn bg btn-sm" onclick="expCSV('cutlist')">⬇ CSV</button>
-          <button class="btn borange btn-sm" onclick="expExcel()">📊 Excel</button>
-        </div>
-      </div>
-    </div>
-    <div class="card card-amber">
-      <div class="slbl">⚙️ טולרנס חיתוך (IPC/WHMA)</div>
-      <div style="font-size:.78rem;color:var(--txt2);line-height:1.9">
-        0–100 mm: <strong>±5 mm</strong> &nbsp;|&nbsp; 101–500 mm: <strong>±10 mm</strong><br>
-        501–1500 mm: <strong>±20 mm</strong> &nbsp;|&nbsp; &gt;1500 mm: <strong>±25 mm</strong>
-      </div>
+  
+  <div class="results-body" id="resultsBody">
+    <div class="results-placeholder">
+      <div class="ph-icon">◫</div>
+      <p>סמן אזור בשרטוט כדי לחלץ נתונים</p>
     </div>
   </div>
-
-  <!-- ── TAB: זמן תקן ── -->
-
-  <div class="page" id="p-std">
-    <div class="time-hero">
-      <div class="time-hero-lbl">זמן ייצור כולל מוערך</div>
-      <div class="time-hero-val" id="std-total">—</div>
-      <div style="font-size:.64rem;opacity:.6;margin-top:2px" id="std-total-sub">העלה שרטוט ועבור לכאן</div>
-    </div>
-    <div class="card" id="station-card" style="display:none">
-      <div class="slbl">🏭 פירוט לפי תחנה</div>
-      <div class="station-grid" id="station-grid"></div>
-    </div>
-    <div class="card">
-      <div class="slbl">⚙️ ערכי תקן — עריכה ישירה</div>
-      <div style="font-size:.72rem;color:var(--txt3);margin-bottom:8px">כל הערכים בדקות. שינוי → חישוב מיידי.</div>
-      <div style="border:1px solid var(--border);border-radius:var(--rsm);overflow:hidden" id="std-grid"></div>
-      <div class="btn-row" style="margin-top:8px">
-        <button class="btn bo btn-sm" onclick="resetStdTimes()">↺ ברירת מחדל</button>
-        <button class="btn bp btn-sm" onclick="calcStdTime()">🔄 חשב</button>
-        <button class="btn bg btn-sm" onclick="expCSV('stdtime')">⬇ CSV</button>
-      </div>
-    </div>
-    <div class="panel" id="std-detail-panel" style="display:none">
-      <div class="ph" onclick="toggleP('std-det-body','std-det-tog')">
-        <div class="ph-left">📋 פירוט לפי חוט <span class="ph-badge" id="std-det-cnt">0</span></div>
-        <span class="pt" id="std-det-tog">▼</span>
-      </div>
-      <div class="pb" id="std-det-body">
-        <div class="tbl-wrap"><table>
-          <thead><tr><th>#</th><th>צבע</th><th>SIGNAL</th><th>חיתוך</th><th>קרימפ×2</th><th>הכנסה×2</th><th>לייבל</th><th>סה"כ</th></tr></thead>
-          <tbody id="std-det-tb"></tbody>
-        </table></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── TAB: Vision AI ── -->
-
-  <div class="page" id="p-vis">
-    <div class="vision-hero">
-      <div class="vision-title">🤖 Claude Vision — חילוץ אורכים</div>
-      <div class="vision-sub">שולח כל דף גיאומטרי ל-Claude ומחלץ אורכי חוטים. דורש מפתח Anthropic API.</div>
-      <div class="vision-key-row">
-        <input type="password" id="api-key" class="vision-key-inp" placeholder="sk-ant-api03-...">
-        <button class="vision-btn" id="vision-btn" onclick="runVisionAnalysis()">▶ הפעל</button>
-      </div>
-      <div id="vision-prog" style="display:none">
-        <div class="prog-track"><div class="prog-fill" id="vision-fill" style="width:0%"></div></div>
-        <div class="vision-log" id="vision-log"></div>
-      </div>
-    </div>
-    <div id="vision-results" style="display:none">
-      <div class="panel">
-        <div class="ph" onclick="toggleP('vr-body','vr-tog')">
-          <div class="ph-left">🎯 תוצאות Vision <span class="ph-badge" id="vr-cnt">0</span></div>
-          <span class="pt open" id="vr-tog">▼</span>
-        </div>
-        <div class="pb open" id="vr-body">
-          <div class="tbl-wrap"><table>
-            <thead><tr><th>דף</th><th>צבע</th><th>אורך mm</th><th>ביטחון</th><th>החל</th></tr></thead>
-            <tbody id="vr-tb"></tbody>
-          </table></div>
-          <div style="padding:8px">
-            <button class="btn bp btn-sm" onclick="applyAllVision()">✓ החל הכל</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="slbl">ℹ️ הוראות</div>
-      <div style="font-size:.76rem;color:var(--txt2);line-height:1.9;direction:rtl">
-        1. העלה PDF בטאב "ניתוח" וסרוק.<br>
-        2. הכנס מפתח API מ-<span style="font-family:'DM Mono',monospace;color:var(--cyan2)">console.anthropic.com</span><br>
-        3. לחץ ▶ — כל דף גיאומטרי נשלח ל-Claude Vision.<br>
-        4. סקור תוצאות → "החל הכל" או "החל" לפריט.<br>
-        5. עבור לטאב "Cut List" לראות תוצאה מלאה.
-      </div>
-    </div>
-  </div>
-
-  <!-- ── TAB: זיכרון ── -->
-
-  <div class="page" id="p-mem">
-    <div class="card card-green">
-      <div class="slbl" style="color:var(--green)">🔒 כספת מקומית</div>
-      <div id="vault-stats" style="font-size:.8rem;color:var(--txt2);line-height:2"></div>
-      <div class="prog-track"><div class="prog-fill" id="vbar" style="width:0%"></div></div>
-      <div class="btn-row" style="margin-top:6px">
-        <button class="btn bg btn-sm" onclick="exportVault()">💾 גיבוי JSON</button>
-        <button class="btn bo btn-sm" onclick="importVault()">📂 טען</button>
-        <button class="btn bd btn-sm" onclick="clearVault()">🗑 מחק הכל</button>
-      </div>
-      <input type="file" id="imp-fi" accept=".json" style="display:none" onchange="doImport(event)">
-    </div>
-    <div class="card">
-      <div class="slbl">⚙️ מצב מודלים</div>
-      <div id="model-status" style="font-size:.8rem;color:var(--txt2);line-height:2"></div>
-      <div class="btn-row" style="margin-top:6px">
-        <button class="btn bw btn-sm" onclick="showDLscreen()">⬇ הורד מחדש / הוסף מודל</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="slbl">➕ הוסף ידע ידנית</div>
-      <div class="field"><input type="text" id="mq" placeholder="שאלה / נושא" dir="rtl"></div>
-      <div class="field"><textarea id="ma" rows="3" style="resize:none" dir="rtl" placeholder="תשובה / מידע הנדסי..."></textarea></div>
-      <div class="field"><input type="text" id="mt" placeholder="תגיות: AWG, מחברים..." dir="rtl"></div>
-      <button class="btn bp" onclick="addManual()">שמור בזיכרון</button>
-    </div>
-    <div style="font-size:.88rem;font-weight:700;padding:2px 0 6px">ידע שנלמד (<span id="kb-cnt">0</span>)</div>
-    <div id="mem-list"></div>
-  </div>
-
-</div><!-- /app -->
-
-<!-- ── BNAV ── -->
-
-<div id="bnav" style="display:none">
-  <button class="nb on" id="nav-ana" onclick="goPage('ana')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-    ניתוח</button>
-  <button class="nb" id="nav-cut" onclick="goPage('cut')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
-    Cut List</button>
-  <button class="nb" id="nav-std" onclick="goPage('std')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    זמן תקן</button>
-  <button class="nb" id="nav-vis" onclick="goPage('vis')">
-    <div class="nb-pip" id="vis-pip"></div>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-    Vision AI</button>
-  <button class="nb" id="nav-mem" onclick="goPage('mem')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    זיכרון</button>
 </div>
 
-<div id="toast"></div>
+<!-- ══════════════════════ ZONE TYPE MODAL ══════════════════════ -->
+<div class="modal-backdrop" id="zoneModal">
+  <div class="modal">
+    <div class="modal-title">סוג האזור שנבחר</div>
+    <div class="modal-sub" id="zoneModalCoords">x: 0 y: 0 | w: 0 h: 0</div>
+    
+    <div class="zone-options">
+      <div class="zone-option" id="opt-bom" onclick="selectZoneType('bom')">
+        <div class="zone-option-icon icon-bom">📋</div>
+        <div class="zone-option-text">
+          <div class="zone-option-name">טבלת רכיבים (BOM)</div>
+          <div class="zone-option-desc">רשימת חלקים, כמויות, קטלוגים</div>
+        </div>
+      </div>
+      <div class="zone-option" id="opt-fromto" onclick="selectZoneType('fromto')">
+        <div class="zone-option-icon icon-fromto">🔌</div>
+        <div class="zone-option-text">
+          <div class="zone-option-name">From–To</div>
+          <div class="zone-option-desc">טבלת חיבורים וכבלים</div>
+        </div>
+      </div>
+      <div class="zone-option" id="opt-drawing" onclick="selectZoneType('drawing')">
+        <div class="zone-option-icon icon-drawing">📐</div>
+        <div class="zone-option-text">
+          <div class="zone-option-name">נתוני שרטוט</div>
+          <div class="zone-option-desc">כותרת, מספר, גרסה, תאריך</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeZoneModal()">ביטול</button>
+      <button class="btn btn-primary" id="confirmZoneBtn" onclick="confirmZoneType()">חלץ ►</button>
+    </div>
+  </div>
+</div>
 
-<!-- ════════════════════════════════════════
-     JAVASCRIPT
-════════════════════════════════════════ -->
+<!-- ══════════════════════ SAVE TEMPLATE MODAL ══════════════════════ -->
+<div class="modal-backdrop" id="saveModal">
+  <div class="modal">
+    <div class="modal-title">שמור תבנית</div>
+    <div class="modal-sub">התבנית תזכור את המיקום ועוגני טקסט לזיהוי אוטומטי</div>
+    <div class="input-group">
+      <label class="input-label">שם התבנית</label>
+      <input class="input-field" id="templateNameInput" placeholder="BOM_CHERY / FROMTO_MANN..." autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSaveModal()">ביטול</button>
+      <button class="btn btn-primary" onclick="confirmSaveTemplate()">שמור</button>
+    </div>
+  </div>
+</div>
 
 <script>
-'use strict';
-// ── CONSTANTS ──
-var VAULT_KEY   = 'ec16_vault';
-var INIT_KEY    = 'ec16_init';
-var MODS_KEY    = 'ec16_mods';
-var STDTIME_KEY = 'ec16_std';
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-// ── MODEL STATE ──
-var M = {
-  pdfReady:false, ocrReady:false, ocrWorker:null,
-  trocrReady:false, trocrPipe:null,
-  trocrBaseReady:false, trocrBasePipe:null,
-  mlReady:false, mlPipe:null,
-  cvReady:false
+const state = {
+  pdfs: [], currentPdfIdx: 0, currentPage: 1, totalPages: 0,
+  items: [], zoom: 1, tx: 0, ty: 0,
+  mode: 'nav', rect: {x:0,y:0,w:0,h:0},
+  library: JSON.parse(localStorage.getItem('wes_lib_v3')||'{}'),
+  zones: [], activeZone: 0,
+  SCALE: 3.0
 };
 
-// ── APP STATE ──
-var WIRES=[], BOM=[], CONNS=[], PROJECT={}, PAGES_INFO=[];
-var ALL_PAGE_TEXTS={}, _pageImages={}, _visionResults=[];
-var currentFile=null;
-var _selectedMods={pdfjs:true,ocr:true,trocr:false,trocrbase:false,minilm:false,opencv:false};
+const viewport  = document.getElementById('viewport');
+const wrapper   = document.getElementById('canvas-wrapper');
+const pCanvas   = document.getElementById('pdf-canvas');
+const dCanvas   = document.getElementById('draw-layer');
+const dCtx      = dCanvas.getContext('2d');
+const pCtx      = pCanvas.getContext('2d');
+const zoomBadge = document.getElementById('zoom-badge');
+const statusEl  = document.getElementById('status');
+const pageInfo  = document.getElementById('pageInfo');
 
-// ── COLORS ──
-var CDOT={'RED':'#ef4444','BLK':'#111827','BLACK':'#111827','WHT':'#e5e7eb','WHITE':'#e5e7eb','BLU':'#3b82f6','BLUE':'#3b82f6','GRN':'#10b981','GREEN':'#10b981','YEL':'#f59e0b','YELLOW':'#f59e0b','ORN':'#f97316','ORANGE':'#f97316','VIO':'#8b5cf6','VIOLET':'#8b5cf6','GRY':'#9ca3af','GREY':'#9ca3af','BRN':'#78350f','BROWN':'#78350f','PNK':'#ec4899','PINK':'#ec4899','SHIELD':'#6b7280','BARE':'#d1d5db'};
-var CNORM={'BLK':'BLK','BLACK':'BLK','RED':'RED','WHT':'WHT','WHITE':'WHT','BLU':'BLU','BLUE':'BLU','GRN':'GRN','GREEN':'GRN','YEL':'YEL','YELLOW':'YEL','VIO':'VIO','VIOLET':'VIO','ORN':'ORN','ORANGE':'ORN','GRY':'GRY','GREY':'GRY','GRAY':'GRY','BRN':'BRN','BROWN':'BRN','PNK':'PNK','PINK':'PNK','SHIELD':'SHIELD','BARE':'BARE'};
-var CFULL={'BLK':'BLACK','RED':'RED','WHT':'WHITE','BLU':'BLUE','GRN':'GREEN','YEL':'YELLOW','VIO':'VIOLET','ORN':'ORANGE','GRY':'GREY','BRN':'BROWN','PNK':'PINK','SHIELD':'SHIELD','BARE':'BARE'};
-var CWORDS='BLK|BLACK|RED|WHT|WHITE|BLU|BLUE|GRN|GREEN|YEL|YELLOW|VIO|VIOLET|ORN|ORANGE|GRY|GREY|GRAY|BRN|BROWN|PNK|PINK|SHIELD|BARE';
-function nc(c){return CNORM[(c||'').toUpperCase()]||c.toUpperCase();}
-function fc(c){var n=nc(c);return CFULL[n]||n;}
-function dotColor(c){var n=nc((c||'').split('/')[0].split(' ')[0]);return CDOT[n]||CDOT[c]||'#9ca3af';}
+updateTemplateUI();
 
-// ════════════════════════════════════════
-//  MODULE SELECTION
-// ════════════════════════════════════════
-function toggleMod(id){
-  // trocr and trocrbase mutually exclusive
-  if(id==='trocrbase'&&!_selectedMods.trocrbase){_selectedMods.trocr=false;_setModUI('trocr',false);}
-  if(id==='trocr'&&!_selectedMods.trocr){_selectedMods.trocrbase=false;_setModUI('trocrbase',false);}
-  _selectedMods[id]=!_selectedMods[id];
-  _setModUI(id,_selectedMods[id]);
-}
-function _setModUI(id,on){
-  var el=document.getElementById('mod-'+id),chk=document.getElementById('chk-'+id);
-  if(el){if(on)el.classList.add('selected');else el.classList.remove('selected');}
-  if(chk)chk.textContent=on?'✓':'';
-}
+// ── FILE LOAD ──────────────────────────────────────────────
+document.getElementById('pdfIn').onchange = async e => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  setStatus('טוען...','');
+  showLoad(true);
+  for (const file of files) {
+    try {
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({data: new Uint8Array(buf)}).promise;
+      state.pdfs.push({name: file.name, pdf});
+    } catch(err) { setStatus('שגיאה: '+err.message,'err'); }
+  }
+  if (state.pdfs.length) {
+    state.currentPdfIdx = state.pdfs.length - 1;
+    state.currentPage = 1;
+    await renderPage();
+  }
+  showLoad(false);
+  e.target.value = '';
+};
 
-// ════════════════════════════════════════
-//  BOOT
-// ════════════════════════════════════════
-document.addEventListener('DOMContentLoaded',function(){
-  loadStdTimes(); renderStdGrid();
-  ensureBuiltIn(); updateVaultStats();
-  // restore mod selections
-  try{
-    var sm=JSON.parse(localStorage.getItem(MODS_KEY)||'null');
-    if(sm){
-      _selectedMods=Object.assign({pdfjs:true,ocr:true,trocr:false,trocrbase:false,minilm:false,opencv:false},sm);
-      Object.keys(_selectedMods).forEach(function(k){_setModUI(k,_selectedMods[k]);});
-    }
-  }catch(e){}
-  var s=localStorage.getItem(INIT_KEY);
-  if(s&&s!==''){enterApp();silentInit(s);}
-  else document.getElementById('dl-screen').style.display='flex';
-});
+async function renderPage() {
+  const obj = state.pdfs[state.currentPdfIdx];
+  if (!obj) return;
+  showLoad(true);
+  state.totalPages = obj.pdf.numPages;
+  pageInfo.textContent = state.currentPage + ' / ' + state.totalPages;
+  document.getElementById('prevPage').disabled = state.currentPage <= 1;
+  document.getElementById('nextPage').disabled = state.currentPage >= state.totalPages;
 
-function enterApp(){
-  document.getElementById('dl-screen').style.display='none';
-  document.getElementById('topbar').style.display='flex';
-  document.getElementById('app').style.display='block';
-  document.getElementById('bnav').style.display='flex';
-  renderMemory(); updateVaultStats(); updateModelStatus();
-}
+  const page = await obj.pdf.getPage(state.currentPage);
+  const vp = page.getViewport({scale: state.SCALE});
+  pCanvas.width  = dCanvas.width  = vp.width;
+  pCanvas.height = dCanvas.height = vp.height;
+  await page.render({canvasContext: pCtx, viewport: vp}).promise;
 
-// ════════════════════════════════════════
-//  DOWNLOAD FLOW
-// ════════════════════════════════════════
-function startDownload(){
-  localStorage.setItem(MODS_KEY,JSON.stringify(_selectedMods));
-  var btn=document.getElementById('dl-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spin"></span>&nbsp; מוריד...';
-  document.getElementById('dl-prog').style.display='block';
-  var steps=[];
-  if(_selectedMods.pdfjs)     steps.push({id:'pdfjs',    label:'PDF.js',     fn:loadPDFjs});
-  if(_selectedMods.ocr)       steps.push({id:'ocr',      label:'Tesseract',  fn:loadTesseract});
-  if(_selectedMods.trocr)     steps.push({id:'trocr',    label:'TrOCR-small',fn:loadTrOCRsmall});
-  if(_selectedMods.trocrbase) steps.push({id:'trocrbase',label:'TrOCR-base', fn:loadTrOCRbase});
-  if(_selectedMods.minilm)    steps.push({id:'minilm',   label:'MiniLM',     fn:loadMiniLM});
-  if(_selectedMods.opencv)    steps.push({id:'opencv',   label:'OpenCV',     fn:loadOpenCV});
-  if(!steps.length){localStorage.setItem(INIT_KEY,'skip');setTimeout(enterApp,300);return;}
-  var total=steps.length,done=0;
-  function runNext(i){
-    if(i>=steps.length){
-      setDL(100,'✓ הכל מוכן!');
-      var parts=[];
-      if(M.pdfReady)parts.push('pdf');if(M.ocrReady)parts.push('ocr');
-      if(M.trocrBaseReady)parts.push('trocrbase');else if(M.trocrReady)parts.push('trocr');
-      if(M.mlReady)parts.push('ml');if(M.cvReady)parts.push('cv');
-      localStorage.setItem(INIT_KEY,parts.join('+')||'skip');
-      setTimeout(enterApp,1000);return;
-    }
-    var s=steps[i];
-    setDLstate(s.id,'pending',s.label+': מוריד...');
-    setDL(Math.round(i/total*85),s.label+'...');
-    s.fn(function(ok){
-      setDLstate(s.id,ok?'ok':'err',s.label+(ok?' ✓':' ✗'));
-      done++;setDL(Math.round(done/total*90));runNext(i+1);
+  // Extract text items
+  const content = await page.getTextContent();
+  state.items = content.items
+    .filter(it => it.str.trim())
+    .map(it => {
+      const tx = pdfjsLib.Util.transform(vp.transform, it.transform);
+      return {str: it.str.trim(), x: tx[4], y: tx[5]};
     });
-  }
-  runNext(0);
+
+  document.getElementById('drop-hint').style.display = 'none';
+  setStatus("עמ' " + state.currentPage + " — " + obj.name, 'ok');
+  fitToScreen();
+  autoMatch();
+  showLoad(false);
 }
 
-function skipDownload(){localStorage.setItem(INIT_KEY,'skip');enterApp();notif('Parser בלבד — ללא OCR','warn');}
-function showDLscreen(){
-  document.getElementById('dl-screen').style.display='flex';
-  document.getElementById('topbar').style.display='none';
-  document.getElementById('app').style.display='none';
-  document.getElementById('bnav').style.display='none';
-  document.getElementById('dl-prog').style.display='none';
-  setDL(0,'');
-  var btn=document.getElementById('dl-btn');btn.disabled=false;btn.innerHTML='⬇&nbsp; הורד מודלים שנבחרו';
-}
-function silentInit(s){
-  if(s.indexOf('pdf')>=0)    loadPDFjs(function(){});
-  if(s.indexOf('ocr')>=0)    loadTesseract(function(){});
-  if(s.indexOf('trocrbase')>=0) loadTrOCRbase(function(){});
-  else if(s.indexOf('trocr')>=0) loadTrOCRsmall(function(){});
-  if(s.indexOf('ml')>=0)     loadMiniLM(function(){});
-  if(s.indexOf('cv')>=0)     loadOpenCV(function(){});
-}
-function setDL(pct,msg){document.getElementById('dl-fill').style.width=(pct||0)+'%';if(msg!==undefined)document.getElementById('dl-lbl').textContent=msg;}
-function setDLstate(id,cls,txt){var el=document.getElementById('ds-'+id);if(!el)return;el.textContent=txt;el.className='dl-state '+cls;}
-
-// ════════════════════════════════════════
-//  MODULE LOADERS
-// ════════════════════════════════════════
-function loadPDFjs(cb){
-  if(typeof pdfjsLib!=='undefined'){M.pdfReady=true;setMdot('pdf','ok','PDF ✓');if(cb)cb(true);return;}
-  var s=document.createElement('script');
-  s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-  s.onload=function(){try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';M.pdfReady=true;setMdot('pdf','ok','PDF ✓');if(cb)cb(true);}catch(e){if(cb)cb(false);}};
-  s.onerror=function(){setMdot('pdf','off','PDF ✗');if(cb)cb(false);};
-  document.head.appendChild(s);
-}
-
-function loadTesseract(cb){
-  if(typeof Tesseract!=='undefined'){_createOCRWorker(cb);return;}
-  var s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-  s.onload=function(){_createOCRWorker(cb);};
-  s.onerror=function(){setMdot('ocr','off','OCR ✗');if(cb)cb(false);};
-  document.head.appendChild(s);
-}
-function _createOCRWorker(cb){
-  try{
-    Tesseract.createWorker(['eng'],1,{logger:function(m){if(m.status==='recognizing text')setFS(35+Math.round(m.progress*30),'OCR: '+Math.round(m.progress*100)+'%');}})
-    .then(function(w){M.ocrWorker=w;M.ocrReady=true;setMdot('ocr','ok','OCR ✓');if(cb)cb(true);})
-    .catch(function(){setMdot('ocr','off','OCR ✗');if(cb)cb(false);});
-  }catch(e){setMdot('ocr','off','OCR ✗');if(cb)cb(false);}
-}
-
-function _loadTrOCR(modelId,sizeLabel,stateKey,pipeKey,cbId,cb){
-  if(M[stateKey]&&M[pipeKey]){if(cb)cb(true);return;}
-  var CDN='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0/dist/transformers.min.js';
-  import(CDN).then(function(mod){
-    var T=mod.default||mod;
-    T.env.allowRemoteModels=true; T.env.useBrowserCache=true;
-    T.pipeline('image-to-text',modelId,{dtype:'q8',progress_callback:function(p){
-      if(p.status==='progress'&&p.progress!=null)setDLstate(cbId,'pending',sizeLabel+': '+Math.round(p.progress)+'%');
-    }}).then(function(pipe){
-      M[stateKey]=true;M[pipeKey]=pipe;
-      setMdot('trocr','ok','TrOCR ✓');if(cb)cb(true);
-    }).catch(function(){setMdot('trocr','off','TrOCR ✗');if(cb)cb(false);});
-  }).catch(function(){setMdot('trocr','off','TrOCR ✗');if(cb)cb(false);});
-}
-function loadTrOCRsmall(cb){_loadTrOCR('Xenova/trocr-small-printed','TrOCR-small','trocrReady','trocrPipe','trocr',cb);}
-function loadTrOCRbase(cb){_loadTrOCR('Xenova/trocr-base-printed','TrOCR-base','trocrBaseReady','trocrBasePipe','trocrbase',cb);}
-
-function loadMiniLM(cb){
-  if(M.mlReady){if(cb)cb(true);return;}
-  var CDN='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0/dist/transformers.min.js';
-  import(CDN).then(function(mod){
-    var T=mod.default||mod;T.env.allowRemoteModels=true;T.env.useBrowserCache=true;
-    T.pipeline('feature-extraction','Xenova/all-MiniLM-L6-v2',{progress_callback:function(p){if(p.progress!=null)setDL(50+Math.round(p.progress*.45),'MiniLM: '+Math.round(p.progress)+'%');}})
-    .then(function(pipe){M.mlPipe=pipe;M.mlReady=true;setMdot('ml','ok','AI ✓');if(cb)cb(true);})
-    .catch(function(){setMdot('ml','off','AI ✗');if(cb)cb(false);});
-  }).catch(function(){setMdot('ml','off','AI ✗');if(cb)cb(false);});
-}
-
-function loadOpenCV(cb){
-  if(M.cvReady){if(cb)cb(true);return;}
-  var s=document.createElement('script');
-  s.src='https://docs.opencv.org/4.8.0/opencv.js';
-  s.onload=function(){
-    if(typeof cv!=='undefined'){
-      cv.onRuntimeInitialized=function(){M.cvReady=true;setMdot('cv','ok','CV ✓');if(cb)cb(true);};
-      if(cv.Mat){{M.cvReady=true;setMdot('cv','ok','CV ✓');if(cb)cb(true);}}
-    }else{setMdot('cv','off','CV ✗');if(cb)cb(false);}
-  };
-  s.onerror=function(){setMdot('cv','off','CV ✗');if(cb)cb(false);};
-  document.head.appendChild(s);
-}
-
-function setMdot(id,state,label){
-  var p=document.getElementById('p-'+id),l=document.getElementById('l-'+id);
-  if(p)p.className='pill '+(state==='ok'?'ok':'');
-  if(l)l.textContent=label;
-}
-function updateModelStatus(){
-  var el=document.getElementById('model-status');if(!el)return;
-  var trocrStr=M.trocrBaseReady?'TrOCR-base ✓':M.trocrReady?'TrOCR-small ✓':'לא פעיל';
-  el.innerHTML=
-    'PDF.js: <strong style="color:'+(M.pdfReady?'var(--green)':'var(--amber)')+'">'+( M.pdfReady?'✓ פעיל':'—')+'</strong><br>'+
-    'Tesseract: <strong style="color:'+(M.ocrReady?'var(--green)':'var(--amber)')+'">'+( M.ocrReady?'✓ פעיל':'—')+'</strong><br>'+
-    'TrOCR: <strong style="color:'+((M.trocrReady||M.trocrBaseReady)?'var(--green)':'var(--amber)')+'">'+trocrStr+'</strong><br>'+
-    'MiniLM: <strong style="color:'+(M.mlReady?'var(--green)':'var(--amber)')+'">'+( M.mlReady?'✓ פעיל':'— (TF-IDF)')+'</strong><br>'+
-    'OpenCV: <strong style="color:'+(M.cvReady?'var(--green)':'var(--amber)')+'">'+( M.cvReady?'✓ Hough Lines':'—')+'</strong><br>'+
-    '<span style="font-size:.68rem;color:var(--txt3)">מנוע: HarnessPro v4 · Pipeline Multi-Page</span>';
-}
-
-// ════════════════════════════════════════
-//  SMART OCR PIPELINE
-// ════════════════════════════════════════
-var _OCR_MIN_CHARS=80, _OCR_MIN_CONF=55;
-async function runSmartOCR(imgUrl){
-  var tessResult=null, tessConf=0;
-  if(M.ocrReady&&typeof Tesseract!=='undefined'){
-    try{
-      var r=await Tesseract.recognize(imgUrl,'eng',{logger:function(m){if(m.status==='recognizing text')setFS(35+Math.round(m.progress*25),'OCR: '+Math.round(m.progress*100)+'%');}});
-      tessResult=r.data.text||'';tessConf=r.data.confidence||0;
-      var mc=(tessResult.match(/[A-Z0-9\-\/\.]/g)||[]).length;
-      if(mc>=_OCR_MIN_CHARS&&tessConf>=_OCR_MIN_CONF)return tessResult;
-    }catch(e){}
-  }
-  var activePipe=M.trocrBaseReady?M.trocrBasePipe:M.trocrReady?M.trocrPipe:null;
-  if(activePipe){
-    try{
-      var safe=await _prepImg(imgUrl);
-      var tr=await activePipe(safe);
-      var trocrText=(tr&&tr[0]&&tr[0].generated_text)||'';
-      return _mergeOCR(tessResult,trocrText);
-    }catch(e){}
-  }
-  return tessResult||'';
-}
-async function _prepImg(url){
-  return new Promise(function(res){
-    var img=new Image();
-    img.onload=function(){
-      var mW=1600,mH=1200;
-      if(img.width<=mW&&img.height<=mH){res(url);return;}
-      var sc=Math.min(mW/img.width,mH/img.height);
-      var cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
-      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-      res(cv.toDataURL('image/jpeg',.9));
-    };
-    img.onerror=function(){res(url);};img.src=url;
-  });
-}
-function _mergeOCR(t,r){
-  if(!t||!t.trim())return r||'';if(!r||!r.trim())return t;
-  function sc(x){return((x.match(/[A-Z0-9]{3,}[\-\/][A-Z0-9]+/g)||[]).length*3)+((x.match(/\b\d{2,4}\b/g)||[]).length)+x.replace(/\s/g,'').length*.01;}
-  var sT=sc(t),sR=sc(r);
-  if(sT>sR*1.4)return t;if(sR>sT*1.4)return r;
-  return r+'\n--- Tesseract ---\n'+t;
-}
-
-// ════════════════════════════════════════
-//  STANDARD TIME
-// ════════════════════════════════════════
-var STD_DEFS=[
-  {id:'cut',    name:'חיתוך חוט',       unit:'לכל חוט',    val:.5,  st:'חיתוך'},
-  {id:'strip',  name:'קילוף קצה',       unit:'לכל קצה×2',  val:.3,  st:'חיתוך'},
-  {id:'crimp',  name:'קרימפ / מסוף',    unit:'לכל קצה×2',  val:1.2, st:'קרימפ'},
-  {id:'solder', name:'הלחמה',           unit:'לכל קצה',    val:2.0, st:'קרימפ'},
-  {id:'insert', name:'הכנסה למחבר',     unit:'לכל קצה×2',  val:.3,  st:'הרכבה'},
-  {id:'heat',   name:'Heatshrink',      unit:'לכל חוט',    val:1.5, st:'הרכבה'},
-  {id:'label',  name:'לייבל',           unit:'לכל חוט',    val:.4,  st:'הרכבה'},
-  {id:'jig',    name:'הידוק ללוח',      unit:'קבוע',       val:5.0, st:'הרכבה'},
-  {id:'test',   name:'בדיקת רצף',       unit:'לכל חוט',    val:.5,  st:'בדיקה'},
-  {id:'hipot',  name:'Hi-Pot',          unit:'קבוע',       val:10., st:'בדיקה'},
-  {id:'visual', name:'בדיקה ויזואלית',  unit:'קבוע',       val:5.0, st:'בדיקה'},
-  {id:'pack',   name:'אריזה',           unit:'קבוע',       val:3.0, st:'בדיקה'},
-];
-var _stdT={};
-function loadStdTimes(){try{var s=JSON.parse(localStorage.getItem(STDTIME_KEY)||'null');if(s)_stdT=s;else{STD_DEFS.forEach(function(d){_stdT[d.id]=d.val;});}}catch(e){STD_DEFS.forEach(function(d){_stdT[d.id]=d.val;});}}
-function saveStdTimes(){try{localStorage.setItem(STDTIME_KEY,JSON.stringify(_stdT));}catch(e){}}
-function resetStdTimes(){STD_DEFS.forEach(function(d){_stdT[d.id]=d.val;document.getElementById('std-'+d.id).value=d.val;});saveStdTimes();calcStdTime();notif('איפוס','ok');}
-function renderStdGrid(){
-  var g=document.getElementById('std-grid');if(!g)return;
-  g.innerHTML=STD_DEFS.map(function(d){
-    return'<div class="std-row">'+
-      '<div><div class="std-row-name">'+escH(d.name)+'</div><div class="std-row-unit">'+escH(d.unit)+'</div></div>'+
-      '<span style="font-size:.62rem;font-family:\'DM Mono\',monospace;color:var(--txt3);padding:1px 6px;border:1px solid var(--border);border-radius:6px">'+escH(d.st)+'</span>'+
-      '<input class="std-inp" type="number" step=".1" min="0" id="std-'+d.id+'" value="'+(_stdT[d.id]||d.val)+'" onchange="onStdChange(\''+d.id+'\',this.value)">'+
-      '</div>';
-  }).join('');
-}
-function onStdChange(id,val){_stdT[id]=parseFloat(val)||0;saveStdTimes();calcStdTime();}
-function calcStdTime(){
-  var n=WIRES.length;
-  if(!n){document.getElementById('std-total').textContent='—';document.getElementById('std-total-sub').textContent='אין שרטוט';document.getElementById('station-card').style.display='none';document.getElementById('std-detail-panel').style.display='none';return;}
-  var T=_stdT;
-  var fixed=(T.jig||0)+(T.hipot||0)+(T.visual||0)+(T.pack||0);
-  var perWire=(T.cut||0)+(T.strip||0)*2+(T.crimp||0)*2+(T.insert||0)*2+(T.heat||0)+(T.label||0)+(T.test||0);
-  var total=fixed+perWire*n;
-  var h=Math.floor(total/60),m=Math.round(total%60);
-  document.getElementById('std-total').textContent=(h?h+'h ':'')+m+'m';
-  document.getElementById('std-total-sub').textContent=n+' חוטים · '+total.toFixed(1)+' דקות';
-  // stations
-  var st={'חיתוך':((T.cut||0)+(T.strip||0)*2)*n,'קרימפ':((T.crimp||0)*2+(T.solder||0))*n,'הרכבה':((T.insert||0)*2+(T.heat||0)+(T.label||0))*n+(T.jig||0),'בדיקה':(T.test||0)*n+(T.hipot||0)+(T.visual||0)+(T.pack||0)};
-  document.getElementById('station-card').style.display='block';
-  document.getElementById('station-grid').innerHTML=Object.keys(st).map(function(s){var v=st[s];var hh=Math.floor(v/60),mm=Math.round(v%60);return'<div class="station-card"><div class="station-name">'+s+'</div><div class="station-time">'+(hh?hh+'h ':'')+mm+'m</div></div>';}).join('');
-  // detail
-  document.getElementById('std-detail-panel').style.display='block';
-  document.getElementById('std-det-cnt').textContent=n;
-  document.getElementById('std-det-tb').innerHTML=WIRES.map(function(w){
-    var tot=(T.cut||0)+(T.strip||0)*2+(T.crimp||0)*2+(T.insert||0)*2+(T.heat||0)+(T.label||0)+(T.test||0);
-    var dc=dotColor(w.color);
-    return'<tr><td style="color:var(--txt3)">'+w.id+'</td><td><span class="wdot" style="background:'+dc+'"></span>'+escH(w.color)+'</td><td style="color:var(--purple)">'+escH(w.signal||'—')+'</td><td>'+((T.cut||0).toFixed(1))+'</td><td>'+(((T.crimp||0)*2).toFixed(1))+'</td><td>'+(((T.insert||0)*2).toFixed(1))+'</td><td>'+((T.label||0).toFixed(1))+'</td><td style="font-weight:700;color:var(--cyan2)">'+tot.toFixed(1)+'</td></tr>';
-  }).join('');
-}
-
-// ════════════════════════════════════════
-//  FILE HANDLING
-// ════════════════════════════════════════
-function dzO(e){e.preventDefault();document.getElementById('dz').classList.add('over');}
-function dzL(){document.getElementById('dz').classList.remove('over');}
-function dzDrop(e){e.preventDefault();dzL();var f=e.dataTransfer.files[0];if(f){currentFile=f;showFC(f);}}
-function onFile(e){var f=e.target.files[0];if(f){currentFile=f;showFC(f);}}
-function showFC(f){
-  document.getElementById('dz').style.display='none';
-  document.getElementById('file-status').style.display='block';
-  document.getElementById('fs-icon').textContent=f.type.indexOf('image')>=0?'🖼️':'📄';
-  document.getElementById('fs-name').textContent=f.name;
-  document.getElementById('fs-meta').textContent=(f.size/1024).toFixed(1)+' KB · '+f.type;
-  setFS(0,'לחץ "נתח" לסריקת כל הדפים');
-}
-function resetFile(){
-  currentFile=null;WIRES=[];BOM=[];CONNS=[];PROJECT={};PAGES_INFO=[];ALL_PAGE_TEXTS={};_pageImages={};_visionResults=[];
-  document.getElementById('dz').style.display='block';
-  document.getElementById('file-status').style.display='none';
-  document.getElementById('results').style.display='none';
-  var pb=document.getElementById('page-badges');if(pb)pb.style.display='none';
-}
-function setFS(pct,msg){document.getElementById('fp').style.width=pct+'%';document.getElementById('fs-lbl').textContent=msg;}
-
-// ════════════════════════════════════════
-//  MAIN ANALYSIS
-// ════════════════════════════════════════
-function runAnalysis(){
-  if(!currentFile){notif('אין קובץ','warn');return;}
-  document.getElementById('btn-run').disabled=true;
-  setFS(3,'קורא קובץ...');
-  var f=currentFile;
-  if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
-    var r=new FileReader();r.onload=function(e){extractAllPages(e.target.result);};r.readAsArrayBuffer(f);
-  }else{
-    var r2=new FileReader();r2.onload=function(e){extractImage(e.target.result);};r2.readAsDataURL(f);
-  }
-}
-
-async function extractAllPages(ab){
-  // If no PDF.js — fallback to built-in parser
-  if(!M.pdfReady||typeof pdfjsLib==='undefined'){
-    setFS(8,'מנוע מובנה (ללא PDF.js)...');
-    var t=await _azExtract(ab);
-    processAllText({'1':t||''},{});
+function fitToScreen() {
+  // Try multiple sources for viewport size
+  const vw = viewport.clientWidth  || viewport.offsetWidth  || window.innerWidth;
+  const vh = viewport.clientHeight || viewport.offsetHeight || (window.innerHeight - 120);
+  if (!vw || !vh || !pCanvas.width || !pCanvas.height) {
+    requestAnimationFrame(fitToScreen);
     return;
   }
-  var doc;
-  try{doc=await pdfjsLib.getDocument({data:ab}).promise;}
-  catch(e){notif('PDF לא נפתח: '+e.message,'danger');document.getElementById('btn-run').disabled=false;return;}
-  var np=doc.numPages;
-  setFS(8,'PDF: '+np+' דפים');
-  var texts={},imgs={},hasGeo={};
-  for(var pg=1;pg<=np;pg++){
-    var pct=8+Math.round((pg-1)/np*55);
-    setFS(pct,'מנתח דף '+pg+'/'+np+'...');
-    try{
-      var page=await doc.getPage(pg);
-      // Text
-      var tc=await page.getTextContent();
-      var pt=tc.items.map(function(i){return i.str;}).join('\n');
-      texts[pg]=pt;
-      // Render image
-      var sc=1.8,vp=page.getViewport({scale:sc});
-      var cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
-      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-      imgs[pg]=cv.toDataURL('image/jpeg',.82);
-      // Geometric detection via operator list
-      var ops=await page.getOperatorList();
-      var lc=0;for(var oi=0;oi<ops.fnArray.length;oi++){if(ops.fnArray[oi]===13||ops.fnArray[oi]===14)lc++;}
-      hasGeo[pg]=lc>40;
-      // OCR fallback if text sparse
-      if(pt.replace(/\s/g,'').length<25){
-        setFS(pct,'OCR דף '+pg+'...');
-        var ocred=await runSmartOCR(imgs[pg]);
-        if(ocred)texts[pg]=ocred;
-      }
-    }catch(e){texts[pg]='';}
+  const z = Math.min(vw / pCanvas.width, vh / pCanvas.height) * 0.92;
+  state.zoom = z;
+  state.tx = (vw - pCanvas.width  * z) / 2;
+  state.ty = (vh - pCanvas.height * z) / 2;
+  applyTransform();
+}
+
+function applyTransform() {
+  wrapper.style.transform = 'translate('+state.tx+'px,'+state.ty+'px) scale('+state.zoom+')';
+  zoomBadge.textContent = Math.round(state.zoom * 100)+'%';
+}
+
+async function changePage(d) {
+  const np = state.currentPage + d;
+  if (np < 1 || np > state.totalPages) return;
+  state.currentPage = np;
+  await renderPage();
+}
+
+// ── NAVIGATION (pan/zoom) ──────────────────────────────────
+let drag = false, pin = false, startDist = 0, initZ = 1, lx, ly;
+
+viewport.addEventListener('mousedown', e => {
+  if (state.mode === 'nav') { drag=true; lx=e.clientX-state.tx; ly=e.clientY-state.ty; }
+  else startDraw(e.clientX, e.clientY);
+});
+viewport.addEventListener('mousemove', e => {
+  if (drag && state.mode==='nav') { state.tx=e.clientX-lx; state.ty=e.clientY-ly; applyTransform(); }
+  else if (drag) moveDraw(e.clientX, e.clientY);
+});
+viewport.addEventListener('mouseup', () => endDraw());
+viewport.addEventListener('mouseleave', () => { drag=false; });
+
+viewport.addEventListener('wheel', e => {
+  const f = e.deltaY < 0 ? 1.1 : 0.9;
+  const r = viewport.getBoundingClientRect();
+  const cx = e.clientX - r.left, cy = e.clientY - r.top;
+  state.tx = cx - (cx-state.tx)*f;
+  state.ty = cy - (cy-state.ty)*f;
+  state.zoom = Math.max(0.05, Math.min(10, state.zoom*f));
+  applyTransform();
+  e.preventDefault();
+}, {passive:false});
+
+viewport.addEventListener('touchstart', e => {
+  if (state.mode==='nav') {
+    if (e.touches.length===2) {
+      pin=true;
+      startDist = Math.hypot(e.touches[0].pageX-e.touches[1].pageX, e.touches[0].pageY-e.touches[1].pageY);
+      initZ = state.zoom;
+    } else { drag=true; lx=e.touches[0].pageX-state.tx; ly=e.touches[0].pageY-state.ty; }
+  } else { startDraw(e.touches[0].clientX, e.touches[0].clientY); }
+}, {passive:true});
+
+viewport.addEventListener('touchmove', e => {
+  if (state.mode==='nav') {
+    if (pin && e.touches.length===2) {
+      const d = Math.hypot(e.touches[0].pageX-e.touches[1].pageX, e.touches[0].pageY-e.touches[1].pageY);
+      state.zoom = Math.max(0.05, Math.min(10, initZ*(d/startDist)));
+      applyTransform();
+    } else if (drag) {
+      state.tx=e.touches[0].pageX-lx; state.ty=e.touches[0].pageY-ly;
+      applyTransform();
+    }
+  } else { moveDraw(e.touches[0].clientX, e.touches[0].clientY); }
+  e.preventDefault();
+}, {passive:false});
+
+viewport.addEventListener('touchend', () => { pin=false; endDraw(); drag=false; });
+
+// ── DRAWING ───────────────────────────────────────────────
+function startDraw(cx, cy) {
+  drag = true;
+  const b = dCanvas.getBoundingClientRect();
+  // Convert screen coords to canvas coords (accounting for zoom/pan)
+  state.rect.x = (cx - b.left) / state.zoom;
+  state.rect.y = (cy - b.top)  / state.zoom;
+  state.rect.w = 0; state.rect.h = 0;
+}
+function moveDraw(cx, cy) {
+  if (!drag) return;
+  const b = dCanvas.getBoundingClientRect();
+  state.rect.w = (cx - b.left) / state.zoom - state.rect.x;
+  state.rect.h = (cy - b.top)  / state.zoom - state.rect.y;
+  redrawBox();
+}
+function endDraw() {
+  if (drag && state.mode==='mark' && Math.abs(state.rect.w)>10 && Math.abs(state.rect.h)>10) {
+    openZoneModal();
   }
-  _pageImages=imgs;
-  setFS(68,'מנתח תוכן...');
-  processAllText(texts,hasGeo);
+  drag = false;
 }
 
-async function extractImage(dataUrl){
-  setFS(15,'OCR תמונה...');
-  var text=await runSmartOCR(dataUrl);
-  _pageImages={'1':dataUrl};
-  processAllText({'1':text||''},{});
+function redrawBox(color) {
+  color = color || '#00d4ff';
+  dCtx.clearRect(0, 0, dCanvas.width, dCanvas.height);
+  const {x,y,w,h} = state.rect;
+  dCtx.save();
+  dCtx.strokeStyle = color;
+  dCtx.lineWidth = 3 / state.zoom;
+  dCtx.setLineDash([8/state.zoom, 4/state.zoom]);
+  dCtx.strokeRect(x, y, w, h);
+  dCtx.setLineDash([]);
+  dCtx.fillStyle = color==='#00d4ff' ? 'rgba(0,212,255,0.07)' : 'rgba(124,58,237,0.07)';
+  dCtx.fillRect(x, y, w, h);
+  dCtx.restore();
 }
 
-function processAllText(pageTexts,pageHasGeo){
-  ALL_PAGE_TEXTS=pageTexts;
-  var allText=Object.keys(pageTexts).sort(function(a,b){return+a-+b;}).map(function(p){return'=== PAGE '+p+' ===\n'+(pageTexts[p]||'');}).join('\n\n');
-  setFS(72,'Project info...');
-  PROJECT=extractProject(allText);
-  setFS(76,'סיווג דפים...');
-  PAGES_INFO=classifyPages(pageTexts,pageHasGeo);
-  renderPageBadges(PAGES_INFO);
-  setFS(80,'חילוץ חוטים...');
-  var allWires=[];
-  Object.keys(pageTexts).forEach(function(pg){
-    var pgN=parseInt(pg),isGeo=!!pageHasGeo[pgN];
-    var pgW=extractWiresFromPage(pageTexts[pg],pgN,isGeo,PROJECT.cableLength||0);
-    allWires=mergeWires(allWires,pgW);
+// ── MODE ──────────────────────────────────────────────────
+function toggleMode() {
+  state.mode = state.mode==='nav' ? 'mark' : 'nav';
+  const btn = document.getElementById('modeBtn');
+  if (state.mode==='mark') {
+    btn.innerHTML='<span class="btn-icon">✏️</span> סימון';
+    btn.classList.add('btn-active'); btn.classList.remove('btn-ghost');
+    dCanvas.style.pointerEvents='auto';
+    viewport.style.cursor='crosshair';
+  } else {
+    btn.innerHTML='<span class="btn-icon">✋</span> ניווט';
+    btn.classList.remove('btn-active'); btn.classList.add('btn-ghost');
+    dCanvas.style.pointerEvents='none';
+    viewport.style.cursor='grab';
+  }
+}
+
+function resetView() { fitToScreen(); }
+
+// ── ZONE MODAL ────────────────────────────────────────────
+let pendingType = null;
+function openZoneModal() {
+  document.getElementById('zoneModalCoords').textContent =
+    'x:'+Math.round(state.rect.x)+' y:'+Math.round(state.rect.y)+' | '+Math.round(Math.abs(state.rect.w))+'×'+Math.round(Math.abs(state.rect.h));
+  pendingType = null;
+  ['bom','fromto','drawing'].forEach(t => document.getElementById('opt-'+t).classList.remove('selected'));
+  document.getElementById('zoneModal').classList.add('open');
+}
+function closeZoneModal() { document.getElementById('zoneModal').classList.remove('open'); }
+function selectZoneType(t) {
+  pendingType = t;
+  ['bom','fromto','drawing'].forEach(k => document.getElementById('opt-'+k).classList.toggle('selected', k===t));
+}
+function confirmZoneType() {
+  if (!pendingType) { alert('בחר סוג'); return; }
+  closeZoneModal();
+  extractZone(pendingType);
+}
+
+// ── EXTRACTION ────────────────────────────────────────────
+function extractCurrentZone() {
+  if (!state.items.length) { alert('טען PDF'); return; }
+  if (Math.abs(state.rect.w) < 5) { alert('סמן אזור'); return; }
+  openZoneModal();
+}
+
+function extractZone(type) {
+  const r = state.rect;
+  const x1=Math.min(r.x,r.x+r.w), x2=Math.max(r.x,r.x+r.w);
+  const y1=Math.min(r.y,r.y+r.h), y2=Math.max(r.y,r.y+r.h);
+  const items = state.items.filter(i => i.x>=x1 && i.x<=x2 && i.y>=y1 && i.y<=y2);
+  const data = type==='drawing' ? parseKV(items) : parseTable(items);
+  const labels = {bom:'BOM', fromto:'From–To', drawing:'שרטוט'};
+  state.zones.push({id:Date.now(), type, name:labels[type]+" | עמ' "+state.currentPage, data, pageNum:state.currentPage});
+  state.activeZone = state.zones.length-1;
+  renderTabs(); renderResults(state.activeZone);
+}
+
+// ── PARSE ─────────────────────────────────────────────────
+function rowBands(items) {
+  if (!items.length) return [];
+  const ys = [...new Set(items.map(i=>i.y))].sort((a,b)=>a-b);
+  const gaps = [];
+  for (let i=1;i<ys.length;i++) gaps.push(ys[i]-ys[i-1]);
+  gaps.sort((a,b)=>a-b);
+  const tol = Math.max((gaps[Math.floor(gaps.length*0.25)]||4)*1.8, 5);
+  const bands = [];
+  for (const y of ys) {
+    const last = bands[bands.length-1];
+    if (last && y-last.max<=tol) last.max=Math.max(last.max,y);
+    else bands.push({min:y, max:y});
+  }
+  return bands;
+}
+
+function parseTable(items) {
+  if (!items.length) return {headers:[], rows:[]};
+  const bands = rowBands(items);
+  const rows = bands.map(b =>
+    items.filter(i=>i.y>=b.min-1&&i.y<=b.max+1).sort((a,b)=>a.x-b.x).map(i=>i.str)
+  );
+  const maxC = Math.max(...rows.map(r=>r.length),0);
+  const norm = rows.map(r=>{ while(r.length<maxC) r.push(''); return r; });
+  return {headers: norm[0]||[], rows: norm.slice(1)};
+}
+
+function parseKV(items) {
+  const bands = rowBands(items);
+  const pairs = bands.map(b => {
+    const row = items.filter(i=>i.y>=b.min-1&&i.y<=b.max+1).sort((a,b)=>a.x-b.x);
+    return row.length>=2
+      ? {label:row[0].str, value:row.slice(1).map(r=>r.str).join(' ')}
+      : {label:row[0]?.str||'', value:''};
   });
-  // Geometric length assignment
-  allWires=assignGeoLengths(allWires,pageTexts,pageHasGeo);
-  WIRES=allWires;
-  setFS(88,'BOM + מחברים...');
-  BOM=extractBOM(allText);
-  CONNS=buildConnectors(WIRES);
-  setFS(100,'✓ ניתוח הושלם — '+WIRES.length+' חוטים, '+BOM.length+' BOM');
-  renderResults();
-  calcStdTime();
-  document.getElementById('btn-run').disabled=false;
-  var withLen=WIRES.filter(function(w){return w.length>0;}).length;
-  notif('הושלם — '+WIRES.length+' חוטים · '+withLen+' עם אורך · '+BOM.length+' BOM',withLen>0?'ok':'warn');
+  return {type:'kv', pairs};
 }
 
-// ── PAGE CLASSIFICATION ──
-function classifyPages(texts,hasGeo){
-  return Object.keys(texts).map(function(pg){
-    var t=texts[pg]||'',pgN=parseInt(pg);
-    var isTable=new RegExp('\\b('+CWORDS+')\\s*#\\s*\\d{1,2}','i').test(t)||/\b\d{2}AWG\b/i.test(t);
-    var isGeo=!!hasGeo[pgN]||/\b\d{3,4}\s*(?:mm)?\b/.test(t);
-    var isTitle=/Drawing\s*Number|REV\s*[:\s]|Amphenol|©|TITLE\s*BLOCK/i.test(t);
-    var type=isTitle&&!isTable?'title':isTable&&!isGeo?'table':isGeo&&!isTable?'geo':isTable&&isGeo?'mixed':'unknown';
-    return{page:pgN,type:type,hasGeo:isGeo,hasTable:isTable};
-  });
+// ── TEMPLATES ─────────────────────────────────────────────
+function updateTemplateUI() {
+  const el = document.getElementById('templateList');
+  el.innerHTML='<option value="">תבנית...</option>';
+  for (const n in state.library) {
+    const o=document.createElement('option'); o.value=n; o.textContent=n; el.appendChild(o);
+  }
 }
-function renderPageBadges(pages){
-  var el=document.getElementById('page-badges');if(!el)return;
-  var labels={geo:'📐 גיאומטרי',table:'📋 טבלת חוטים',title:'🏭 Title Block',mixed:'🔀 מעורב',unknown:'❓ לא ידוע'};
-  el.innerHTML=pages.map(function(p){return'<span class="page-badge '+p.type+'">דף '+p.page+' — '+(labels[p.type]||p.type)+'</span>';}).join('');
-  el.style.display='flex';
+function openSaveTemplateModal() {
+  if (Math.abs(state.rect.w)<5) { alert('סמן אזור'); return; }
+  document.getElementById('templateNameInput').value='';
+  document.getElementById('saveModal').classList.add('open');
+  setTimeout(()=>document.getElementById('templateNameInput').focus(),150);
 }
-
-// ── WIRE EXTRACTION ──
-function extractWiresFromPage(text,pgN,isGeo,cableLen){
-  var wires=[],seen={},wid=1;
-  // Pattern A: COLOR #AWG [signal] [length]
-  var reA=new RegExp('\\b('+CWORDS+')(?:[/\\-]('+CWORDS+'))?\\s*(?:#\\s*|AWG\\s*)?([0-9]{1,2})(?:\\s*AWG)?(?:\\s+([A-Z0-9_+\\-/(]{2,20}))?(?:\\s+(\\d{3,4}))?','gi'),m;
-  while((m=reA.exec(text))!==null){
-    var col1=nc(m[1]),col2=m[2]?nc(m[2]):'';
-    var awg=(m[3]||'22')+'AWG';
-    var sig=(m[4]||'').trim();if(CNORM[sig.toUpperCase()])sig='';
-    var rawLen=m[5]?parseInt(m[5]):0;
-    if(rawLen<=26||rawLen>5000)rawLen=0;
-    var colorLabel=fc(col1)+(col2?'/'+fc(col2):'');
-    var key=colorLabel+'|'+awg+'|'+(sig||'');
-    if(!seen[key]){
-      seen[key]=true;
-      // fallback: look nearby for a 3-4 digit number
-      if(!rawLen&&isGeo){
-        var ctx=text.slice(Math.max(0,m.index-80),m.index+100);
-        var lm=ctx.match(/\b(\d{3,4})\b/);
-        if(lm){var v=parseInt(lm[1]);if(v>26&&v<=5000)rawLen=v;}
-      }
-      var len=rawLen||cableLen||0;
-      wires.push({id:wid++,color:colorLabel,awg:awg,signal:sig,fromConn:'',toConn:'',length:len,qty:1,source:len>0?(isGeo?'geo':'table'):'table',page:pgN});
+function closeSaveModal() { document.getElementById('saveModal').classList.remove('open'); }
+function confirmSaveTemplate() {
+  const name=document.getElementById('templateNameInput').value.trim();
+  if (!name) { alert('הכנס שם'); return; }
+  const r=state.rect;
+  const x1=Math.min(r.x,r.x+r.w),x2=Math.max(r.x,r.x+r.w),y1=Math.min(r.y,r.y+r.h),y2=Math.max(r.y,r.y+r.h);
+  const anchors=state.items.filter(i=>i.x>=x1&&i.x<=x2&&i.y>=y1&&i.y<=y2).map(i=>i.str).slice(0,6);
+  state.library[name]={rect:{...state.rect}, anchors};
+  localStorage.setItem('wes_lib_v3', JSON.stringify(state.library));
+  updateTemplateUI(); closeSaveModal();
+  setStatus('נשמר: '+name,'ok');
+}
+function applySelectedTemplate() {
+  const name=document.getElementById('templateList').value;
+  if (name && state.library[name]) { state.rect={...state.library[name].rect}; redrawBox(); }
+}
+function deleteTemplate() {
+  const name=document.getElementById('templateList').value;
+  if (!name){alert('בחר תבנית');return;}
+  if (!confirm('מחק "'+name+'"?'))return;
+  delete state.library[name];
+  localStorage.setItem('wes_lib_v3',JSON.stringify(state.library));
+  updateTemplateUI();
+}
+function autoMatch() {
+  for (const name in state.library) {
+    const t=state.library[name];
+    if (!t.anchors?.length) continue;
+    const hits=t.anchors.filter(a=>state.items.some(i=>i.str===a)).length;
+    if (hits>=3) {
+      state.rect={...t.rect}; redrawBox('#7c3aed');
+      setStatus('זוהה: '+name,'match');
+      document.getElementById('templateList').value=name;
+      return;
     }
   }
-  // Pattern B: FROM TO COLOR AWG [signal] [length]
-  var reB=new RegExp('([A-Z][A-Z0-9]*[\\/][A-Z]\\d*)\\s+([A-Z][A-Z0-9]*[\\/][A-Z]\\d*)\\s+((?:'+CWORDS+')(?:[/\\-](?:'+CWORDS+'))?)\\s*(?:#\\s*(\\d{1,2})|(\\d{1,2})\\s*AWG)?(?:\\s+([A-Z0-9_+\\-]{2,20}))?(?:\\s+(\\d{3,4}))?','gi');
-  while((m=reB.exec(text))!==null){
-    var from=m[1],to=m[2],colR=m[3].trim(),awgR=((m[4]||m[5])||'22')+'AWG';
-    var sigR=(m[6]||'').trim(),lenR=m[7]?parseInt(m[7]):cableLen||0;
-    if(lenR<=26||lenR>5000)lenR=cableLen||0;
-    var cN=nc(colR.split('/')[0]),cLabel=fc(cN)+(colR.indexOf('/')>=0?'/'+fc(nc(colR.split('/')[1])):'');
-    var key2=from+'_'+to+'_'+cLabel;
-    if(!seen[key2]){
-      seen[key2]=true;
-      var ex=wires.find(function(w){return w.color===cLabel&&w.awg===awgR&&!w.fromConn;});
-      if(ex){ex.fromConn=from;ex.toConn=to;if(lenR>0){ex.length=lenR;ex.source=isGeo?'geo':'table';}}
-      else wires.push({id:wid++,color:cLabel,awg:awgR,signal:sigR,fromConn:from,toConn:to,length:lenR,qty:1,source:lenR>0?(isGeo?'geo':'table'):'table',page:pgN});
-    }
-  }
-  // Pattern C: standalone dimension lines adjacent to color tokens
-  if(isGeo){
-    var lines=text.split(/[\n\r]+/);
-    for(var li=0;li<lines.length;li++){
-      var lTrim=lines[li].trim();
-      var dimM=lTrim.match(/^(\d{3,4})\s*(?:mm|MM)?$/);
-      if(dimM){
-        var dv=parseInt(dimM[1]);
-        if(dv>=50&&dv<=5000){
-          var ctx2=(lines[li-2]||'')+(lines[li-1]||'')+(lines[li+1]||'');
-          var cm2=ctx2.match(new RegExp('\\b('+CWORDS+')\\b','i'));
-          if(cm2){var n2=nc(cm2[1]),f2=fc(n2);var wr=wires.find(function(w){return w.color===f2&&!w.length;});if(wr){wr.length=dv;wr.source='geo';}}
-        }
-      }
-    }
-  }
-  return wires;
 }
 
-function mergeWires(existing,newW){
-  newW.forEach(function(nw){
-    var match=existing.find(function(ew){
-      return ew.color===nw.color&&ew.awg===nw.awg&&(ew.signal===nw.signal||!ew.signal||!nw.signal);
-    });
-    if(match){
-      if(!match.fromConn&&nw.fromConn)match.fromConn=nw.fromConn;
-      if(!match.toConn&&nw.toConn)match.toConn=nw.toConn;
-      if(!match.signal&&nw.signal)match.signal=nw.signal;
-      if(nw.length>0&&(match.length===0||nw.source==='geo'&&match.source!=='geo')){match.length=nw.length;match.source=nw.source;}
-      match.qty=Math.max(match.qty||1,nw.qty||1);
-    }else existing.push(nw);
+// ── TABS & RENDER ─────────────────────────────────────────
+function renderTabs() {
+  const el=document.getElementById('tabs'); el.innerHTML='';
+  const ic={bom:'📋',fromto:'🔌',drawing:'📐'};
+  state.zones.forEach((z,i)=>{
+    const b=document.createElement('button');
+    b.className='tab-btn'+(i===state.activeZone?' active':'');
+    b.innerHTML='<span class="tab-type">'+(ic[z.type]||'◫')+'</span>'+z.name;
+    b.onclick=()=>{state.activeZone=i;renderTabs();renderResults(i);};
+    el.appendChild(b);
   });
-  existing.forEach(function(w,i){w.id=i+1;});
-  return existing;
 }
-
-function assignGeoLengths(wires,texts,hasGeo){
-  Object.keys(hasGeo).forEach(function(pg){
-    if(!hasGeo[pg])return;
-    var t=texts[pg]||'';
-    var dims=[],dr=/\b(\d{3,4})\b/g,dm;
-    while((dm=dr.exec(t))!==null){var v=parseInt(dm[1]);if(v>=50&&v<=5000)dims.push(v);}
-    var noLen=wires.filter(function(w){return w.page===parseInt(pg)&&!w.length;});
-    noLen.forEach(function(w,i){if(i<dims.length){w.length=dims[i];w.source='geo';}});
-  });
-  return wires;
-}
-
-// ── PROJECT EXTRACTION ──
-function extractProject(text){
-  var p={drawingNo:'',rev:'',title:'',company:'',date:'',cableLength:0,tolerance:''};
-  var dm=text.match(/\b([0-9]{1,3}[A-Z]-[A-Z0-9]+-\d{2,6}(?:-\d{2})?)\b/);if(dm)p.drawingNo=dm[1];
-  if(!p.drawingNo){var dm2=text.match(/Drawing\s*Number\s*[\n:]\s*([A-Z0-9][A-Z0-9\-]{3,20})/i);if(dm2)p.drawingNo=dm2[1].trim();}
-  var rv=text.match(/REV[:\s]+([A-Z0-9])\b/i);if(rv&&rv[1].toUpperCase()!=='N')p.rev=rv[1].toUpperCase();
-  var dt=text.match(/(\d{2}[.\-\/]\d{2}[.\-\/]\d{2,4})/);if(dt)p.date=dt[1];
-  var co=text.match(/\b(Amphenol(?:\s+Tel-Ad)?|MOLEX|TE\s+Connectivity|Deutsch)\b/i);if(co)p.company=co[1];
-  var cl=text.match(/\b([0-9]{3,4})\s*(?:mm|MM)\b/);if(cl){var v=parseInt(cl[1]);if(v>=50&&v<=5000)p.cableLength=v;}
-  if(p.cableLength)p.tolerance='0-100:±5 · 101-500:±10 · 501-1500:±20 · 1501+:±25';
-  return p;
-}
-
-// ── BOM ──
-var _PN_DB={'CWT-9001':{d:'Open Barrel Splice 22AWG',c:'SPLICE'},'ATUM-12/4-0':{d:'Heatshrink 12:4mm',c:'HEATSHRINK'},'55A0111-22-0':{d:'Wire TEFLON 22AWG BLK',c:'WIRE'},'55A0111-22-2':{d:'Wire TEFLON 22AWG RED',c:'WIRE'},'55A0111-22-6':{d:'Wire TEFLON 22AWG BLU',c:'WIRE'},'55A0111-22-9':{d:'Wire TEFLON 22AWG WHT',c:'WIRE'},'22TE1934-7':{d:'Wire TEFLON 22AWG VIO',c:'WIRE'},'DTM04-4P':{d:'Deutsch DT 4P Receptacle',c:'CONNECTOR'},'DTM06-4S':{d:'Deutsch DT 4P Plug',c:'CONNECTOR'},'D38999/26WB35PN':{d:'MIL-DTL-38999 13P Plug',c:'CONNECTOR'},'D38999/24WB35PN':{d:'MIL-DTL-38999 13P Receptacle',c:'CONNECTOR'},'M85049-38-11W':{d:'Cable Clamp Size 11',c:'MATERIAL'},'171692-0104':{d:'Molex MEGA-FIT 4P',c:'CONNECTOR'}};
-var _SKIP={ITEM:1,'P/N':1,DESCRIPTION:1,Qty:1,UN:1,DATE:1,DRAWN:1,APPROVED:1,REV:1};
-var _UNITS={PC:1,MT:1,EA:1,M:1,LF:1,PCS:1,SET:1};
-function extractBOM(text){
-  var bom=[],toks=text.split(/[\n\r]+/).map(function(l){return l.trim();}).filter(Boolean),bi=0;
-  while(bi<toks.length){
-    var tok=toks[bi];
-    if(/^\d{1,2}$/.test(tok)&&+tok>=1&&+tok<=30){
-      var iN=+tok;bi++;if(bi>=toks.length)break;
-      var pn=toks[bi];if(pn.length<3||_SKIP[pn]){bi++;continue;}bi++;
-      var dP=[],qty=0,un='';
-      while(bi<toks.length){
-        var t2=toks[bi];
-        if(/^[\d\.]+$/.test(t2)&&bi+1<toks.length&&_UNITS[(toks[bi+1]||'').toUpperCase()]){qty=+t2;un=toks[bi+1].toUpperCase();bi+=2;break;}
-        if(/^\d{1,2}$/.test(t2)&&+t2===iN+1)break;
-        if(_SKIP[t2])break;
-        if(t2)dP.push(t2);bi++;
-      }
-      var desc=dP.join(' ').replace(/\s+[\d\.]+\s*$/,'').trim();
-      var db=_PN_DB[pn];if(db&&(!desc||desc.length<5))desc=db.d;
-      var cat=db?db.c:_hpCat(desc,pn);
-      if(!bom.some(function(x){return x.item===iN;})&&pn.length>=3)
-        bom.push({item:iN,pn:pn,desc:desc||pn,qty:qty||1,unit:un||'PC',category:cat});
-    }else{
-      var im=tok.match(/^(\d{1,3})\s+([\w\-\/.()]{3,35})\s+(.{5,55}?)\s{2,}(\d+)\s+(PC|MT|EA|M|SET)\b/i);
-      if(im&&+im[1]>=1&&+im[1]<=100&&!bom.some(function(x){return x.item===+im[1];})){
-        var ipn=im[2].trim(),id2=im[3].trim(),idb=_PN_DB[ipn];
-        if(idb&&id2.length<5)id2=idb.d;
-        bom.push({item:+im[1],pn:ipn,desc:id2,qty:+im[4],unit:im[5].toUpperCase(),category:_hpCat(id2,ipn)});
-      }
-      bi++;
-    }
-  }
-  return bom.sort(function(a,b){return a.item-b.item;});
-}
-function _hpCat(d,p){var dl=(d||'').toLowerCase(),pl=(p||'').toLowerCase();if(/wire|teflon|cable/.test(dl))return'WIRE';if(/contact|crimp|socket/.test(dl))return'CONTACT';if(/connector|receptacle|housing|plug/.test(dl))return'CONNECTOR';if(/fan|motor/.test(dl))return'COMPONENT';if(/terminal|lug/.test(dl))return'TERMINAL';if(/shrink|tubing/.test(dl)||/atum/.test(pl))return'HEATSHRINK';if(/sleev|expan/.test(dl))return'SLEEVING';if(/splice/.test(dl))return'SPLICE';return'MATERIAL';}
-function buildConnectors(wires){var seen={},cs=[];wires.forEach(function(w){[w.fromConn,w.toConn].forEach(function(r){if(r&&r!=='?'&&r!==''&&!seen[r]){seen[r]=true;var p=wires.filter(function(x){return x.fromConn===r||x.toConn===r;}).length;cs.push({ref:r,pins:p,pn:''});}});});return cs.sort(function(a,b){return a.ref.localeCompare(b.ref);});}
-
-// ════════════════════════════════════════
-//  RENDER
-// ════════════════════════════════════════
-function renderResults(){
-  document.getElementById('results').style.display='block';
-  var p=PROJECT,tbF=[];
-  if(p.drawingNo)tbF.push(['Drawing No.',p.drawingNo,true]);
-  if(p.rev)tbF.push(['Rev',p.rev,false]);
-  if(p.date)tbF.push(['Date',p.date,false]);
-  if(p.company)tbF.push(['Company',p.company,false]);
-  if(p.cableLength)tbF.push(['Cable Length',p.cableLength+'mm',false]);
-  if(p.tolerance)tbF.push(['Tolerance',p.tolerance,false]);
-  document.getElementById('tb-grid').innerHTML=tbF.length?tbF.map(function(f){return'<div style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:7px 10px"><div style="font-size:.57rem;font-family:\'DM Mono\',monospace;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">'+escH(f[0])+'</div><div style="font-size:.86rem;font-weight:700;color:'+(f[2]?'var(--cyan2)':'var(--txt)')+'">'+escH(String(f[1]))+'</div></div>';}).join(''):'<div style="grid-column:1/-1;font-size:.78rem;color:var(--txt3);text-align:center;padding:7px">לא זוהה Title Block</div>';
-
-  var withLen=WIRES.filter(function(w){return w.length>0;}).length;
-  var chips='<span class="chip ch-blue">'+WIRES.length+' חוטים</span>';
-  chips+='<span class="chip '+(withLen?'ch-green':'ch-amber')+'">'+withLen+' עם אורך</span>';
-  chips+='<span class="chip ch-purple">'+BOM.length+' BOM</span>';
-  chips+='<span class="chip ch-grey">'+PAGES_INFO.length+' דפים</span>';
-  var gc=PAGES_INFO.filter(function(p){return p.type==='geo'||p.type==='mixed';}).length;
-  if(gc)chips+='<span class="chip ch-orange">'+gc+' גיאומטריים</span>';
-  document.getElementById('tb-chips').innerHTML=chips;
-
-  renderWireTable(WIRES);
-  renderBOMtable(BOM);
-  renderConns(CONNS);
-  var raw=Object.keys(ALL_PAGE_TEXTS).sort(function(a,b){return+a-+b;}).map(function(p){return'=== PAGE '+p+' ===\n'+(ALL_PAGE_TEXTS[p]||'');}).join('\n\n');
-  document.getElementById('raw-txt').textContent=raw.slice(0,10000);
-  document.getElementById('raw-badge').textContent=raw.length+' תווים';
-  document.getElementById('src-legend').style.display='flex';
-  renderCutList();
-  calcStdTime();
-}
-
-function renderWireTable(wires){
-  document.getElementById('we-cnt').textContent=wires.length;
-  document.getElementById('we-tb').innerHTML=wires.length?wires.map(function(w){
-    var dc=dotColor(w.color);
-    var sc=w.source||'table';
-    var ic='we-inp '+(sc==='geo'?'geo':sc==='vision'?'vision':w.length>0?'manual':'');
-    var sl=w.length||'';
-    var srcCls={'geo':'src-geo','vision':'src-vision','manual':'src-manual'}[sc]||'src-none';
-    var srcLbl={'geo':'גיאו','vision':'Vision','manual':'ידני','table':'טבלה'}[sc]||sc;
-    return'<tr id="wr-'+w.id+'">'+
-      '<td style="color:var(--txt3);font-size:.65rem">'+w.id+'</td>'+
-      '<td><span class="wdot" style="background:'+dc+'"></span>'+escH(w.color)+'</td>'+
-      '<td>'+escH(w.awg||'22AWG')+'</td>'+
-      '<td style="color:var(--purple);font-weight:600">'+escH(w.signal||'—')+'</td>'+
-      '<td>'+escH(w.fromConn||'?')+'</td>'+
-      '<td>'+escH(w.toConn||'?')+'</td>'+
-      '<td><input type="number" class="'+ic+'" value="'+sl+'" placeholder="0" min="0" max="9999"'+
-        ' onchange="setLen('+w.id+',this.value)" oninput="setLen('+w.id+',this.value)"></td>'+
-      '<td><input type="number" class="we-inp" value="'+(w.qty||1)+'" min="1" max="999" style="width:44px"'+
-        ' onchange="setQty('+w.id+',this.value)"></td>'+
-      '<td><span class="we-src '+srcCls+'">'+escH(srcLbl)+'</span></td>'+
-      '<td><button onclick="delWire('+w.id+')" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.8rem;padding:2px 5px;border-radius:4px">✕</button></td>'+
-      '</tr>';
-  }).join(''):'<tr><td colspan="10" class="empty">לא חולצו חוטים — בדוק טקסט גולמי</td></tr>';
-}
-
-function filterWireEdit(){
-  var q=document.getElementById('we-filter').value.toLowerCase();
-  WIRES.forEach(function(w){var r=document.getElementById('wr-'+w.id);if(!r)return;r.style.display=!q||((w.color+w.signal+w.awg+w.fromConn+w.toConn).toLowerCase().indexOf(q)>=0)?'':'none';});
-}
-
-function setLen(id,val){
-  var w=WIRES.find(function(x){return x.id===id;});if(!w)return;
-  w.length=parseInt(val)||0;w.source='manual';
-  var row=document.getElementById('wr-'+id);
-  if(row){var inp=row.querySelector('.we-inp');if(inp)inp.className='we-inp manual';var src=row.querySelector('.we-src');if(src){src.className='we-src src-manual';src.textContent='ידני';}}
-  renderCutList();
-}
-function setQty(id,val){var w=WIRES.find(function(x){return x.id===id;});if(w){w.qty=parseInt(val)||1;renderCutList();}}
-function delWire(id){WIRES=WIRES.filter(function(w){return w.id!==id;});WIRES.forEach(function(w,i){w.id=i+1;});renderWireTable(WIRES);renderCutList();}
-
-function setAllLengths(){
-  var v=prompt('אורך אחיד (mm) לחוטים ללא אורך:','450');
-  if(!v)return;var len=parseInt(v)||0;
-  var cnt=0;WIRES.forEach(function(w){if(!w.length){w.length=len;w.source='manual';cnt++;}});
-  renderWireTable(WIRES);renderCutList();notif('הוגדר '+len+'mm ל-'+cnt+' חוטים','ok');
-}
-function addWireRow(){
-  var id=WIRES.length?WIRES[WIRES.length-1].id+1:1;
-  WIRES.push({id:id,color:'?',awg:'22AWG',signal:'',fromConn:'',toConn:'',length:0,qty:1,source:'manual',page:1});
-  renderWireTable(WIRES);renderCutList();
-}
-
-function renderBOMtable(bom){
-  document.getElementById('bom-cnt').textContent=bom.length;
-  var cc={'WIRE':'ch-blue','CONNECTOR':'ch-green','CONTACT':'ch-purple','HEATSHRINK':'ch-amber','SLEEVING':'ch-amber','SPLICE':'ch-red','COMPONENT':'ch-grey','TERMINAL':'ch-grey','MATERIAL':'ch-grey'};
-  document.getElementById('bom-tb').innerHTML=bom.length?bom.map(function(b){return'<tr><td style="font-weight:700;color:var(--cyan2)">'+b.item+'</td><td style="font-weight:700;color:var(--purple)">'+escH(b.pn)+'</td><td class="rtl">'+escH(b.desc)+'</td><td style="font-weight:600">'+b.qty+'</td><td>'+escH(b.unit)+'</td><td><span class="chip '+(cc[b.category]||'ch-grey')+'" style="font-size:.54rem;padding:1px 5px">'+escH(b.category||'')+'</span></td></tr>';}).join(''):'<tr><td colspan="6" class="empty">לא חולץ BOM</td></tr>';
-}
-function renderConns(conns){
-  document.getElementById('conn-cnt').textContent=conns.length;
-  document.getElementById('conn-tb').innerHTML=conns.length?conns.map(function(c){return'<tr><td style="font-weight:700;color:var(--cyan2)">'+escH(c.ref)+'</td><td>'+c.pins+'P</td><td>'+escH(c.pn||'')+'</td></tr>';}).join(''):'<tr><td colspan="3" class="empty">לא זוהו מחברים</td></tr>';
-}
-
-// ════════════════════════════════════════
-//  CUT LIST
-// ════════════════════════════════════════
-function buildGroups(){
-  var g={};
-  WIRES.forEach(function(w){
-    var k=(w.color||'?')+'|'+(w.awg||'22AWG')+'|'+(w.signal||'');
-    if(!g[k])g[k]={color:w.color,awg:w.awg,signal:w.signal,fromConn:w.fromConn,toConn:w.toConn,len:w.length||0,qty:0,source:w.source};
-    g[k].qty+=w.qty||1;
-    if(w.length&&w.source!=='table')g[k].source=w.source;
-  });
-  return Object.values(g);
-}
-function renderCutList(){
-  var groups=buildGroups();
-  var withLen=groups.filter(function(g){return g.len>0;});
-  var totalLen=withLen.reduce(function(s,g){return s+g.len*g.qty;},0);
-  var totalWires=WIRES.reduce(function(s,w){return s+(w.qty||1);},0);
-  var uColors=[...new Set(groups.map(function(g){return g.color;}))].length;
-  document.getElementById('cut-total-len').textContent=totalLen>0?(totalLen/1000).toFixed(2)+'m':'—';
-  document.getElementById('cut-total-sub').textContent=totalWires+' חוטים · '+withLen.length+'/'+groups.length+' עם אורך';
-  document.getElementById('cut-stats').innerHTML=
-    '<div class="cut-stat"><div class="cut-stat-v">'+totalWires+'</div><div class="cut-stat-l">חוטים</div></div>'+
-    '<div class="cut-stat"><div class="cut-stat-v">'+uColors+'</div><div class="cut-stat-l">צבעים</div></div>'+
-    '<div class="cut-stat"><div class="cut-stat-v">'+(totalLen>0?(totalLen/1000).toFixed(1)+'m':'—')+'</div><div class="cut-stat-l">סה"כ</div></div>';
-  document.getElementById('cut-cnt').textContent=groups.length;
-  document.getElementById('cut-tb').innerHTML=groups.length?groups.map(function(g,i){
-    var dc=dotColor(g.color);
-    var tol=g.len>0?(g.len<=100?5:g.len<=500?10:g.len<=1500?20:25):0;
-    var sc=g.source||'table';
-    var srcCls={'geo':'src-geo','vision':'src-vision','manual':'src-manual'}[sc]||'src-none';
-    var srcLbl={'geo':'גיאו','vision':'Vision','manual':'ידני','table':'טבלה'}[sc]||sc;
-    return'<tr>'+
-      '<td style="color:var(--txt3)">'+( i+1)+'</td>'+
-      '<td><span class="wdot" style="background:'+dc+'"></span>'+escH(g.color)+'</td>'+
-      '<td>'+escH(g.awg||'')+'</td>'+
-      '<td style="color:var(--purple);font-weight:600">'+escH(g.signal||'—')+'</td>'+
-      '<td style="font-size:.66rem">'+escH((g.fromConn||'?')+'→'+(g.toConn||'?'))+'</td>'+
-      '<td style="font-weight:700;color:'+(g.len?'var(--cyan2)':'var(--txt3)')+'">'+( g.len||'—')+'</td>'+
-      '<td style="font-weight:600">'+g.qty+'</td>'+
-      '<td style="color:var(--amber)">±'+tol+'</td>'+
-      '<td style="font-weight:700;color:var(--green)">'+(g.len?g.len*g.qty:'—')+'</td>'+
-      '<td><span class="we-src '+srcCls+'">'+srcLbl+'</span></td>'+
-      '</tr>';
-  }).join(''):'<tr><td colspan="10" class="empty">הזן אורכים בטאב "ניתוח"</td></tr>';
-}
-
-// ════════════════════════════════════════
-//  VISION AI
-// ════════════════════════════════════════
-var _visionRunning=false;
-async function runVisionAnalysis(){
-  var key=document.getElementById('api-key').value.trim();
-  if(!key){notif('הכנס מפתח API','warn');return;}
-  if(_visionRunning)return;
-  if(!Object.keys(_pageImages).length){notif('סרוק שרטוט קודם','warn');return;}
-  _visionRunning=true;
-  var btn=document.getElementById('vision-btn');btn.classList.add('running');btn.textContent='⏳ רץ...';
-  document.getElementById('vision-prog').style.display='block';
-  var log=document.getElementById('vision-log');log.textContent='';
-  _visionResults=[];
-  var geoPgs=Object.keys(_pageImages).filter(function(pg){var pi=PAGES_INFO.find(function(p){return p.page===+pg;});return !pi||(pi.type==='geo'||pi.type==='mixed');});
-  if(!geoPgs.length)geoPgs=Object.keys(_pageImages).slice(0,3);
-  var total=geoPgs.length,done=0;
-  for(var gi=0;gi<geoPgs.length;gi++){
-    var pg=geoPgs[gi];
-    document.getElementById('vision-fill').style.width=Math.round(done/total*90)+'%';
-    vlog(log,'📐 דף '+pg+' → Claude Vision...');
-    try{
-      var res=await _askVision(key,_pageImages[pg],pg);
-      if(res&&res.length){res.forEach(function(r){r.page=+pg;});_visionResults=_visionResults.concat(res);vlog(log,'✓ דף '+pg+': '+res.length+' אורכים');}
-      else vlog(log,'⚠ דף '+pg+': לא זוהו');
-    }catch(e){vlog(log,'✗ דף '+pg+': '+e.message);}
-    done++;
-  }
-  document.getElementById('vision-fill').style.width='100%';
-  vlog(log,'✅ סיום — '+_visionResults.length+' תוצאות');
-  renderVisionResults(_visionResults);
-  document.getElementById('vis-pip').classList.add('show');
-  btn.classList.remove('running');btn.textContent='▶ הפעל';
-  _visionRunning=false;
-}
-function vlog(el,msg){el.textContent+=msg+'\n';el.scrollTop=el.scrollHeight;}
-
-async function _askVision(key,imgUrl,pg){
-  var b64=imgUrl.split(',')[1],mt=imgUrl.indexOf('jpeg')>=0?'image/jpeg':'image/png';
-  var prompt='אתה מנתח שרטוט חיווט הנדסי (Wiring Diagram).\n'+
-    'חלץ: כל צבע חוט (BLK/RED/WHT/BLU/GRN/VIO/YEL/ORN), AWG, ואורך בmm מהשרטוט.\n'+
-    'החזר JSON בלבד: [{"color":"BLK","awg":"22","length_mm":450,"confidence":"high","note":"..."},...]\n'+
-    'confidence: high/medium/low. אל תמציא. JSON בלבד.';
-  var resp=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','x-api-key':key,'anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1200,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})
-  });
-  if(!resp.ok){var err=await resp.json().catch(function(){return{};});throw new Error((err.error&&err.error.message)||'HTTP '+resp.status);}
-  var data=await resp.json();
-  var text=(data.content||[]).map(function(c){return c.text||'';}).join('').replace(/```json|```/g,'').trim();
-  try{return JSON.parse(text);}catch(e){var m=text.match(/\[[\s\S]*\]/);if(m)try{return JSON.parse(m[0]);}catch(e2){}return[];}
-}
-
-function renderVisionResults(results){
-  document.getElementById('vision-results').style.display='block';
-  document.getElementById('vr-cnt').textContent=results.length;
-  document.getElementById('vr-tb').innerHTML=results.length?results.map(function(r,i){
-    var cc={'high':'var(--green)','medium':'var(--amber)','low':'var(--red)'}[r.confidence]||'var(--txt3)';
-    return'<tr><td>'+r.page+'</td><td style="font-weight:600">'+escH((r.color||'?')+' #'+(r.awg||'22'))+'</td><td style="font-weight:700;color:var(--cyan2)">'+(r.length_mm||'—')+'</td><td style="color:'+cc+';font-weight:600">'+(r.confidence||'?')+'</td><td><button class="btn bp btn-sm" onclick="applyOneV('+i+')" style="padding:3px 8px;font-size:.62rem;min-height:24px">החל</button></td></tr>';
-  }).join(''):'<tr><td colspan="5" class="empty">אין תוצאות</td></tr>';
-}
-function applyOneV(idx){
-  var r=_visionResults[idx];if(!r||!r.length_mm)return;
-  var w=WIRES.find(function(w){return nc(w.color.split('/')[0])===nc(r.color||'')&&(!w.length||w.source==='table');});
-  if(w){w.length=r.length_mm;w.source='vision';renderWireTable(WIRES);renderCutList();notif(r.length_mm+'mm החל','ok');}
-  else notif('לא נמצא חוט תואם','warn');
-}
-function applyAllVision(){
-  var n=0;_visionResults.forEach(function(r){if(!r.length_mm)return;var w=WIRES.find(function(w){return nc(w.color.split('/')[0])===nc(r.color||'')&&(!w.length||w.source==='table');});if(w){w.length=r.length_mm;w.source='vision';n++;}});
-  renderWireTable(WIRES);renderCutList();notif('הוחלו '+n+' אורכים','ok');
-}
-
-// ════════════════════════════════════════
-//  EXPORT
-// ════════════════════════════════════════
-function expCSV(type){
-  var rows=[],h=[],fn='';
-  if(type==='wire'){
-    h=['#','COLOR','AWG','SIGNAL','FROM','TO','LENGTH_MM','QTY','SOURCE','PAGE'];
-    rows=WIRES.map(function(w){return[w.id,w.color,w.awg,w.signal||'',w.fromConn||'',w.toConn||'',w.length||'',w.qty||1,w.source||'',w.page||''];});fn='Wiring';
-  }else if(type==='bom'){
-    h=['ITEM','P/N','DESCRIPTION','QTY','UNIT','CAT'];
-    rows=BOM.map(function(b){return[b.item,b.pn,b.desc,b.qty,b.unit,b.category];});fn='BOM';
-  }else if(type==='cutlist'){
-    h=['#','COLOR','AWG','SIGNAL','FROM','TO','LENGTH_MM','QTY','TOLERANCE','TOTAL_MM','SOURCE'];
-    var gs=buildGroups(),i=1;
-    rows=gs.map(function(g){var t=g.len>0?(g.len<=100?5:g.len<=500?10:g.len<=1500?20:25):0;return[i++,g.color,g.awg,g.signal||'',g.fromConn||'',g.toConn||'',g.len||'',g.qty,'±'+t,g.len?g.len*g.qty:'',g.source||''];});fn='CutList';
-  }else if(type==='stdtime'){
-    h=['תחנה','פעולה','יחידה','ערך (דק\')','כמות','סה"כ'];
-    var n=WIRES.length;
-    STD_DEFS.forEach(function(d){var v=_stdT[d.id]||d.val;var isF=/קבוע/.test(d.unit);var q=isF?1:/×2/.test(d.unit)?n*2:n;rows.push([d.st,d.name,d.unit,v,q,(v*q).toFixed(1)]);});fn='StdTime';
-  }
-  if(!rows.length){notif('אין נתונים','warn');return;}
-  var csv='\uFEFF'+[h].concat(rows).map(function(r){return r.map(function(v){var s=String(v||'');return s.indexOf(',')>=0||s.indexOf('"')>=0?'"'+s.replace(/"/g,'""')+'"':s;}).join(',');}).join('\n');
-  dlBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),(PROJECT.drawingNo||'harness')+'_'+fn+'.csv');
-  notif(fn+' CSV ✓','ok');
-}
-
-function expExcel(){
-  if(typeof XLSX==='undefined'){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=_doExcel;s.onerror=function(){notif('SheetJS נכשל','danger');};document.head.appendChild(s);}
-  else _doExcel();
-}
-function _doExcel(){
-  var wb=XLSX.utils.book_new();
-  var p=PROJECT;
-  // Sheet 1: Project
-  var s1=[['שדה','ערך']];if(p.drawingNo)s1.push(['Drawing No.',p.drawingNo]);if(p.rev)s1.push(['Rev',p.rev]);if(p.date)s1.push(['Date',p.date]);if(p.company)s1.push(['Company',p.company]);if(p.cableLength)s1.push(['Cable Length mm',p.cableLength]);s1.push([],['דפים','סוג']);PAGES_INFO.forEach(function(pg){s1.push(['דף '+pg.page,pg.type]);});
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'Project Info');
-  // Sheet 2: Wiring
-  var s2=[['#','COLOR','AWG','SIGNAL','FROM','TO','LENGTH_MM','QTY','SOURCE','PAGE']];WIRES.forEach(function(w){s2.push([w.id,w.color,w.awg,w.signal||'',w.fromConn||'',w.toConn||'',w.length||0,w.qty||1,w.source||'',w.page||'']);});
-  var ws2=XLSX.utils.aoa_to_sheet(s2);ws2['!cols']=[{wch:4},{wch:14},{wch:8},{wch:20},{wch:12},{wch:12},{wch:12},{wch:6},{wch:8},{wch:5}];XLSX.utils.book_append_sheet(wb,ws2,'Wiring');
-  // Sheet 3: Cut List
-  var gs=buildGroups();var s3=[['#','COLOR','AWG','SIGNAL','FROM','TO','LENGTH_MM','QTY','TOLERANCE','TOTAL_MM','SOURCE']];gs.forEach(function(g,i){var t=g.len>0?(g.len<=100?5:g.len<=500?10:g.len<=1500?20:25):0;s3.push([i+1,g.color,g.awg,g.signal||'',g.fromConn||'',g.toConn||'',g.len||0,g.qty,'±'+t,g.len?g.len*g.qty:0,g.source||'']);});
-  var ws3=XLSX.utils.aoa_to_sheet(s3);ws3['!cols']=[{wch:4},{wch:14},{wch:8},{wch:20},{wch:12},{wch:12},{wch:12},{wch:6},{wch:10},{wch:12},{wch:8}];XLSX.utils.book_append_sheet(wb,ws3,'Cut List');
-  // Sheet 4: BOM
-  var s4=[['ITEM','P/N','DESCRIPTION','QTY','UNIT','CATEGORY']];BOM.forEach(function(b){s4.push([b.item,b.pn,b.desc,b.qty,b.unit,b.category||'']);});
-  var ws4=XLSX.utils.aoa_to_sheet(s4);ws4['!cols']=[{wch:6},{wch:30},{wch:50},{wch:6},{wch:6},{wch:14}];XLSX.utils.book_append_sheet(wb,ws4,'BOM');
-  // Sheet 5: Standard Time
-  var n=WIRES.length;var s5=[['ENGCORE v16 — זמן תקן','','',''],['שרטוט:',(p.drawingNo||'—'),'חוטים:',n],[],['תחנה','פעולה','יחידה','ערך (דק\')','כמות','סה"כ (דק\')']];
-  STD_DEFS.forEach(function(d){var v=_stdT[d.id]||d.val;var isF=/קבוע/.test(d.unit);var q=isF?1:/×2/.test(d.unit)?n*2:n;s5.push([d.st,d.name,d.unit,v,q,(v*q).toFixed(1)]);});
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s5),'Standard Time');
-  // Sheet 6: Vision Results
-  if(_visionResults.length){var s6=[['דף','COLOR','AWG','LENGTH_MM','CONFIDENCE']];_visionResults.forEach(function(r){s6.push([r.page||'',r.color||'',r.awg||'',r.length_mm||'',r.confidence||'']);});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s6),'Vision Results');}
-  XLSX.writeFile(wb,(p.drawingNo||'harness')+'_ENGCORE_v16_'+Date.now()+'.xlsx');
-  notif('Excel — '+(5+(_visionResults.length?1:0))+' שיטים ✓','ok');
-}
-
-// ════════════════════════════════════════
-//  VAULT
-// ════════════════════════════════════════
-function vLoad(){try{return JSON.parse(localStorage.getItem(VAULT_KEY)||'[]');}catch(e){return[];}}
-function vSave(items){try{localStorage.setItem(VAULT_KEY,JSON.stringify(items));}catch(e){}updateVaultStats();}
-function vAdd(q,a,tags,src){var items=vLoad();var ex=items.find(function(i){return i.q===q;});if(ex){ex.a=a;ex.ts=Date.now();}else items.push({id:Date.now().toString(36),q:q,a:a,tags:tags||[],source:src||'manual',ts:Date.now()});vSave(items);renderMemory();}
-function updateVaultStats(){var items=vLoad();var el=document.getElementById('vault-stats');if(el)el.innerHTML='פריטים: <strong>'+items.length+'</strong> | v16';var b=document.getElementById('vbar');if(b)b.style.width=Math.min(100,items.length/2)+'%';var c=document.getElementById('kb-cnt');if(c)c.textContent=items.length;}
-function exportVault(){dlBlob(new Blob([JSON.stringify({version:'v16',vault:vLoad()},null,2)],{type:'application/json'}),'engcore_v16_vault.json');notif('גיבוי ✓','ok');}
-function importVault(){document.getElementById('imp-fi').click();}
-function doImport(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){try{var d=JSON.parse(ev.target.result);var items=d.vault||d;if(!Array.isArray(items))throw 0;var ex=vLoad();var n=0;items.forEach(function(i){if(!ex.some(function(m){return m.id===i.id;})){ex.push(i);n++;}});vSave(ex);renderMemory();notif('יובאו '+n,'ok');}catch(e2){notif('שגיאת ייבוא','danger');}e.target.value='';};r.readAsText(f);}
-function clearVault(){if(!confirm('מחק את כל הזיכרון?'))return;localStorage.removeItem(VAULT_KEY);renderMemory();updateVaultStats();notif('נמחק','warn');}
-function addManual(){var q=document.getElementById('mq').value.trim(),a=document.getElementById('ma').value.trim(),t=document.getElementById('mt').value.trim();if(!q||!a){notif('מלא שדות','warn');return;}vAdd(q,a,t?t.split(',').map(function(x){return x.trim();}):[],  'manual');document.getElementById('mq').value='';document.getElementById('ma').value='';document.getElementById('mt').value='';notif('נשמר','ok');}
-function renderMemory(){
-  var items=vLoad().slice().reverse();var el=document.getElementById('mem-list');if(!el)return;
-  el.innerHTML=items.length?items.map(function(item){return'<div class="mem-item"><button class="mem-del" onclick="delMem(\''+item.id+'\')">🗑</button><div style="font-size:.58rem;font-family:\'DM Mono\',monospace;color:var(--txt3);text-transform:uppercase;margin-bottom:2px">'+escH(item.source||'')+'</div><div style="font-size:.82rem;font-weight:700;color:var(--txt);margin-bottom:3px">'+escH(item.q)+'</div><div style="font-size:.75rem;color:var(--txt2);line-height:1.5">'+escH(item.a.slice(0,180))+'</div></div>';}).join(''):'<div style="color:var(--txt3);font-size:.78rem;text-align:center;padding:16px">הזיכרון ריק</div>';
-}
-function delMem(id){vSave(vLoad().filter(function(i){return i.id!==id;}));renderMemory();}
-function ensureBuiltIn(){
-  var items=vLoad();
-  if(!items.some(function(i){return i.source==='bi16';})){
-    vAdd('AWG 22 בmm²','AWG 22 = 0.33 mm². IEC קרוב: 0.5 mm²',['AWG'],'bi16');
-    vAdd('ENGCORE v16','מנתח Wiring Diagram מרובה דפים. גיאומטרי + OCR + Vision AI. עריכת אורכים + Cut List + זמן תקן.',['engcore'],'bi16');
-    vAdd('מודלים זמינים','PDF.js (3MB) · Tesseract (8MB) · TrOCR-small (45MB) · TrOCR-base (250MB) · MiniLM (23MB) · OpenCV (8MB)',['מודלים'],'bi16');
-    renderMemory();
+function renderResults(idx) {
+  const zone=state.zones[idx];
+  const body=document.getElementById('resultsBody');
+  if (!zone){body.innerHTML='<div class="results-placeholder"><div class="ph-icon">◫</div><p>סמן אזור בשרטוט</p></div>';return;}
+  if (zone.data.type==='kv') {
+    body.innerHTML='<div class="drawing-grid">'+zone.data.pairs.map(p=>
+      '<div class="drawing-cell"><div class="dc-label">'+esc(p.label)+'</div><div class="dc-value">'+(esc(p.value)||'—')+'</div></div>'
+    ).join('')+'</div>';
+  } else {
+    const {headers,rows}=zone.data;
+    if (!rows.length&&!headers.length){body.innerHTML='<div class="results-placeholder"><div class="ph-icon">∅</div><p>לא נמצא טקסט</p></div>';return;}
+    body.innerHTML='<table><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+
+      rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   }
 }
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-// ════════════════════════════════════════
-//  BUILT-IN PDF PARSER (fallback)
-// ════════════════════════════════════════
-async function _azExtract(ab){
-  function l1(buf){var s='',c=32768;for(var i=0;i<buf.length;i+=c)s+=String.fromCharCode.apply(null,buf.subarray(i,Math.min(i+c,buf.length)));return s;}
-  async function inflate(b){for(var f of['deflate-raw','deflate']){try{var ds=new DecompressionStream(f);var w=ds.writable.getWriter();var r=ds.readable.getReader();w.write(b);w.close();var ch=[];while(1){var rv=await r.read();if(rv.done)break;ch.push(rv.value);}var tot=ch.reduce(function(a,c){return a+c.length;},0);var out=new Uint8Array(tot);var o=0;ch.forEach(function(c){out.set(c,o);o+=c.length;});return out;}catch(e){}}return b;}
-  function parseBT(str){var out=[];var bm,bR=/BT([\s\S]*?)ET/g;while((bm=bR.exec(str))!==null){var blk=bm[1];var tj,tR=/\(([^)]*)\)\s*Tj/g;while((tj=tR.exec(blk))!==null){var sv=tj[1].split('\\n').join(' ').split('\\r').join('').split('\\(').join('(').split('\\)').join(')').trim();if(sv)out.push(sv);}var ta,taR=/\[([\s\S]*?)\]\s*TJ/g;while((ta=taR.exec(blk))!==null){var inn=ta[1],pts=[],pR=/\(([^)]*)\)/g,pm;while((pm=pR.exec(inn))!==null)pts.push(pm[1]);var j=pts.join('').split('\\(').join('(').split('\\)').join(')').trim();if(j)out.push(j);}}return out;}
-  var bytes=new Uint8Array(ab);var raw=l1(bytes);var lines=[];
-  var sR=/stream[\r\n]([\s\S]*?)[\r\n]endstream/g,sm;
-  while((sm=sR.exec(raw))!==null){
-    var sd=sm[1];var sb=new Uint8Array(sd.length);for(var i=0;i<sd.length;i++)sb[i]=sd.charCodeAt(i)&0xff;
-    var dec=await inflate(sb);var t=l1(dec);
-    if(/BT[\s\S]{1,100}(Tj|TJ)/.test(t))lines=lines.concat(parseBT(t));
-  }
-  return lines.join('\n');
+// ── EXPORT ────────────────────────────────────────────────
+function exportCSV() {
+  const z=state.zones[state.activeZone]; if(!z)return;
+  let csv='';
+  if(z.data.type==='kv') csv=z.data.pairs.map(p=>'"'+p.label+'","'+p.value+'"').join('\n');
+  else { const all=[z.data.headers,...z.data.rows]; csv=all.map(r=>r.map(c=>'"'+c+'"').join(',')).join('\n'); }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='wes_'+z.type+'_p'+z.pageNum+'.csv'; a.click();
+}
+function copyTable() {
+  const z=state.zones[state.activeZone]; if(!z)return;
+  let text='';
+  if(z.data.type==='kv') text=z.data.pairs.map(p=>p.label+'\t'+p.value).join('\n');
+  else { const all=[z.data.headers,...z.data.rows]; text=all.map(r=>r.join('\t')).join('\n'); }
+  navigator.clipboard.writeText(text).then(()=>setStatus('הועתק!','ok'));
 }
 
-// ════════════════════════════════════════
-//  UTILS
-// ════════════════════════════════════════
-function goPage(tab){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
-  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
-  document.getElementById('p-'+tab).classList.add('on');
-  document.getElementById('nav-'+tab).classList.add('on');
-  if(tab==='mem'){renderMemory();updateVaultStats();updateModelStatus();}
-  if(tab==='cut')renderCutList();
-  if(tab==='std')calcStdTime();
-}
-function toggleP(bid,tid){
-  var b=document.getElementById(bid),t=document.getElementById(tid);
-  if(b)b.classList.toggle('open');if(t)t.classList.toggle('open');
-}
-function notif(msg,type){
-  type=type||'info';
-  var icons={info:'◈',warn:'⚠',danger:'✕',ok:'✓'};
-  var el=document.createElement('div');el.className='notif n'+type[0];
-  el.innerHTML='<span>'+icons[type]+'</span><span>'+escH(String(msg))+'</span>';
-  var c=document.getElementById('nc');if(!c)return;
-  c.insertBefore(el,c.firstChild);while(c.children.length>3)c.removeChild(c.lastChild);
-  setTimeout(function(){try{if(el.parentNode)el.style.opacity='.4';}catch(e){}},5000);
-}
-function dlBlob(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();}
-function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1800);}
-function escH(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// ── UTILS ─────────────────────────────────────────────────
+function setStatus(msg,type){statusEl.textContent=msg;statusEl.className=type?'status-'+type:'';}
+function showLoad(v){document.getElementById('loading-bar').style.display=v?'block':'none';}
+
+// ── RESIZE PANEL ──────────────────────────────────────────
+(()=>{
+  const handle=document.getElementById('resizeHandle');
+  let sy,sh;
+  function start(e){sy=e.type==='touchstart'?e.touches[0].clientY:e.clientY;sh=document.getElementById('resultsPanel').getBoundingClientRect().height;document.addEventListener('mousemove',move);document.addEventListener('mouseup',end);document.addEventListener('touchmove',move,{passive:false});document.addEventListener('touchend',end);}
+  function move(e){const cy=e.type==='touchmove'?e.touches[0].clientY:e.clientY;const h=Math.max(80,Math.min(window.innerHeight*0.7,sh+(sy-cy)));document.documentElement.style.setProperty('--results-h',h+'px');e.preventDefault();}
+  function end(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',end);document.removeEventListener('touchmove',move);document.removeEventListener('touchend',end);}
+  handle.addEventListener('mousedown',start);handle.addEventListener('touchstart',start,{passive:true});
+})();
+
+// ResizeObserver: re-fit whenever viewport changes size
+new ResizeObserver(() => {
+  if (pCanvas.width > 0) fitToScreen();
+}).observe(viewport);
+
+document.getElementById('zoneModal').addEventListener('click',e=>{if(e.target===document.getElementById('zoneModal'))closeZoneModal();});
+document.getElementById('saveModal').addEventListener('click',e=>{if(e.target===document.getElementById('saveModal'))closeSaveModal();});
 </script>
-
 </body>
 </html>
