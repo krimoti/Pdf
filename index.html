@@ -752,20 +752,38 @@ function loadPDFjs(cb) {
   document.head.appendChild(s);
 }
 function loadTesseract(cb) {
-  if (typeof Tesseract !== 'undefined') { createOCRWorker(cb); return; }
+  if (typeof Tesseract !== 'undefined') { M.ocrReady=true; setMdot('ocr','ok','OCR ✓'); if(cb)cb(true); return; }
   var s = document.createElement('script');
   s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-  s.onload = function() { createOCRWorker(cb); };
-  s.onerror = function() { setMdot('ocr','off','OCR —'); if(cb) cb(false); };
+  s.onload = function() {
+    // On iOS Safari, Web Workers from CDN are blocked — use workerPath override
+    // Tesseract v5 supports workerOptions to point worker to CDN
+    M.ocrReady = true;
+    setMdot('ocr','ok','OCR ✓');
+    if(cb) cb(true);
+  };
+  s.onerror = function() { setMdot('ocr','off','OCR ✗'); if(cb) cb(false); };
   document.head.appendChild(s);
 }
-function createOCRWorker(cb) {
-  try {
-    Tesseract.createWorker(['eng'],1,{
-      logger:function(m){ if(m.status==='recognizing text') setFS(5+m.progress*40,'OCR: '+Math.round(m.progress*100)+'%'); }
-    }).then(function(w){ M.ocrWorker=w; M.ocrReady=true; setMdot('ocr','ok','OCR ✓'); if(cb) cb(true); })
-      .catch(function(){ setMdot('ocr','off','OCR ✗'); if(cb) cb(false); });
-  } catch(e) { setMdot('ocr','off','OCR ✗'); if(cb) cb(false); }
+
+// Wrapper: uses Tesseract.recognize() with CDN workerPath for iOS compatibility
+// Avoids createWorker() which fails silently on iOS Safari
+function _runTesseract(imgUrl, progressCb) {
+  return new Promise(function(resolve, reject) {
+    if (typeof Tesseract === 'undefined') { reject(new Error('Tesseract not loaded')); return; }
+    var opts = {
+      logger: function(m) {
+        if (m.status === 'recognizing text' && progressCb) progressCb(m.progress);
+      },
+      // Point worker script to CDN — fixes iOS Safari cross-origin worker block
+      workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+      corePath:   'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core-simd-lstm.wasm.js',
+      langPath:   'https://tessdata.projectnaptha.com/4.0.0'
+    };
+    Tesseract.recognize(imgUrl, 'eng', opts)
+      .then(function(r) { resolve(r); })
+      .catch(function(e) { reject(e); });
+  });
 }
 function loadMiniLM(cb) {
   if (M.mlReady && M.mlPipe) { if(cb) cb(true); return; }
@@ -1559,8 +1577,8 @@ async function runSmartOCR(imgUrl) {
   if (M.ocrReady && typeof Tesseract !== 'undefined') {
     setFS(M.appleReady?52:42, 'Tesseract OCR: מזהה...');
     try {
-      var r2 = await new Promise(function(res,rej){
-        Tesseract.recognize(imgUrl,'eng',{logger:function(m){if(m.status==='recognizing text')setFS((M.appleReady?52:42)+Math.round(m.progress*20),'Tesseract: '+Math.round(m.progress*100)+'%');}}).then(res).catch(rej);
+      var r2 = await _runTesseract(imgUrl, function(p){
+        setFS((M.appleReady?52:42)+Math.round(p*20),'Tesseract: '+Math.round(p*100)+'%');
       });
       tessRes=r2.data.text||''; tessConf=r2.data.confidence||0;
       var engC=(tessRes.match(/[A-Z0-9\-\/\.]/g)||[]).length;
@@ -1623,8 +1641,9 @@ async function _tryAppleVision(imgUrl) {
         cv.width=img2.width*sc;cv.height=img2.height*sc;
         var ctx=cv.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(sc,sc);ctx.drawImage(img2,0,0);
         setFS(55,'Apple Vision: OCR ב-3x...');
-        Tesseract.recognize(cv.toDataURL('image/png'),'eng',{logger:function(m){if(m.status==='recognizing text')setFS(55+Math.round(m.progress*15),'iOS OCR: '+Math.round(m.progress*100)+'%');}})
-          .then(function(r){resolve(r.data.text||null);}).catch(function(){resolve(null);});
+        _runTesseract(cv.toDataURL('image/png'), function(p){
+          setFS(55+Math.round(p*15),'iOS OCR: '+Math.round(p*100)+'%');
+        }).then(function(r){resolve(r.data.text||null);}).catch(function(){resolve(null);});
       };
       img2.onerror=function(){resolve(null);};img2.src=imgUrl;
     });
@@ -1739,9 +1758,30 @@ var _HP_COL_FULL = {
   GRY:'GREY',GREY:'GREY',GRAY:'GREY',PNK:'PINK',PINK:'PINK',
 };
 var _HP_COL_SUFFIX = {'0':'BLACK','1':'BROWN','2':'RED','3':'ORANGE','4':'YELLOW','5':'GREEN','6':'BLUE','7':'VIOLET','8':'GREY','9':'WHITE'};
-var _HP_SIGNAL_RE = /^(48VDC|48V_RTN|48V_OUT|CTRL[\s(]?PWM[)]?|CTRL|TACHO|GND|VCC|24V_CHARGE|24V_CHARGE_RTN|24V_RTN|24V_OUT|CANH|CANL|SHIELD|PWR|RTN|SIG\d*|VP\+|VN|TEMP|IN\d*|OUT\d*|PWM|TACH)$/i;
+// Extended signal regex — covers 24V_CHARGE_RTN, CHASSIS_GND, EVCSE_POWER_IN, etc.
+var _HP_SIGNAL_RE = /^(48VDC|48V_RTN|48V_OUT|CTRL[\s(]?PWM[)]?|CTRL|TACHO|GND|VCC|24V_CHARGE|24V_CHARGE_RTN|24V_RTN|24V_OUT|24V_CHARGE|CHASSIS_GND|CANH|CANL|SHIELD|PWR|RTN|SIG\d*|VP\+|VN|TEMP|IN\d*|OUT\d*|PWM|TACH|EVCSE_POWER_IN|EVCSE_POWER_GND|PDU_|BMS_|BAT\d)$/i;
 var _HP_COLOR_RE  = /^(RED|BLU|BLUE|VIO|VIOLET|WHT|WHITE|BLK|BLACK|GRN|GREEN|YEL|YELLOW|ORG|ORN|ORANGE|BRN|BROWN|GRY|GREY|GRAY|PNK|PINK|SHIELD|BARE)$/i;
 var _HP_CONN_RE   = /^(FAN|JX\s*\d*|J\d+|P\d+|U\d+\/[A-Z]\d+\/[A-Z]\d+|U\d+\/[A-Z]+\d*|BAT\d+\/[A-Z]+\d*)$/;
+
+// Extended P/N classifier — covers all Amphenol/Deutsch/Molex/military variants
+function _isPN(t) {
+  if(!t||t.length<3)return false;
+  // Standard: letter-start with hyphen/slash separator (DTM04-4P, M85049-38-11W)
+  if(/^[A-Za-z][A-Z0-9a-z]{1,}[-\/][A-Z0-9]/.test(t)&&t.length>3)return true;
+  // D-436-0147 style: single letter + hyphen + digits
+  if(/^[A-Z]-\d{3,}/.test(t))return true;
+  // 55A0111-22-0 style: digits+letter+digits
+  if(/^\d+[A-Z]\d+[-\/]/.test(t))return true;
+  // 1028-027-0405 style: 4-digit + 3-digit + 4-digit segments
+  if(/^\d{4}-\d{3}-\d{4}$/.test(t))return true;
+  // 1028-008-0405 / 1011-046-0405 — same
+  if(/^\d{4}-\d{3}-\d{4}/.test(t))return true;
+  // Short numeric PN: 4+ digit prefix with short suffix (1420-01)
+  if(/^\d{3,5}-\d{2,4}[A-Z]?$/.test(t)&&t.length>=5&&+t.split('-')[0]>999)return true;
+  // ATUM-style: letter-word slash digit
+  if(/^[A-Z]{2,}\s+\d+[\/:]\d/.test(t))return true;
+  return false;
+}
 
 function _hpCat(desc, pn) {
   var d=(desc||'').toLowerCase(), p=(pn||'').toLowerCase();
@@ -1776,6 +1816,93 @@ function _hpWireAWG(color, bom){
 }
 
 // ── MAIN ENGINE ──
+// ── Flat-text pre-processor for OCR/fallback output ──
+// Fixes: split "Connection Area" tokens, rejoins split connectors,
+// zips separated P/N and QTY columns, expands signal aliases
+function _preprocessFlatText(text) {
+  // 1. Remove reversed/mirrored single-char runs: "i p r T h i ..."
+  text = text.replace(/(?:^|(?<=\s))(([a-zA-Z] ){4,}[a-zA-Z]?)(?=\s|$)/gm, ' ');
+  // Fallback for environments without lookbehind:
+  text = text.replace(/\b([a-z] ){4,}[a-z]?\b/g, ' ');
+
+  // 2. Normalize "Connection Area/Areas"
+  text = text.replace(/Connection\s+Areas?\b/gi, 'Connection Area');
+
+  // 3. Rejoin split connectors "U50 EVCSE /J3" → "U50/J3", "U44 AV Charger /P1" → "U44/P1"
+  text = text.replace(/\b(U\d+|J\d+|P\d+)\b\s+(?:[A-Z][A-Za-z0-9 ]{0,25}\s+)?(\/[A-Z]\d*)\b/g,
+    function(m, ref, pin){ return ref + pin; });
+
+  // 4. Strip trailing comma from drawing/part numbers
+  text = text.replace(/\b(\d{2,3}[A-Z]-\d{2,4}-\d{4}-\d{2}),/g, '$1');
+
+  // 5. Normalize signal aliases (parens → underscore names)
+  text = text.replace(/\(24V\s+Charge\s+RTN\)/gi, '24V_CHARGE_RTN');
+  text = text.replace(/\(24V\s+Charge\)/gi, '24V_CHARGE');
+  text = text.replace(/\(Chassis\)/gi, 'CHASSIS_GND');
+  text = text.replace(/\(EVCSE\s+Power\s+GND\)/gi, 'EVCSE_POWER_GND');
+  text = text.replace(/\(EVCSE\s+Power\s+[Ii]n\)/gi, 'EVCSE_POWER_IN');
+  text = text.replace(/\((\w[\w\s]{1,20})\)/g, function(m, inner) {
+    // Generic: (Signal Name) → SIGNAL_NAME if all words look like a signal
+    var clean = inner.trim().toUpperCase().replace(/\s+/g, '_');
+    if (/^[A-Z0-9_]{3,30}$/.test(clean)) return clean;
+    return m;
+  });
+
+  // 6. Deduplicate "Connection Area Connection Area Connection Area" runs
+  text = text.replace(/(Connection Area\s*){2,}/gi, 'Connection Area\n');
+
+  // 7. AWG: normalize "BLK #22" style — already fine, but ensure "#22" is kept
+  text = text.replace(/\bAWG\s*(\d{2})\b/gi, '#$1');
+
+  // 8. BOM column-zip: when P/Ns and QTYs appear in separate runs (different PDF columns)
+  //    Extract ALL P/Ns, extract ALL QTYs, then zip them.
+  //    This handles the case where the PDF stream outputs columns independently.
+  var CONN_RE = /^[A-Z][A-Z0-9]*\d+\/[A-Z]+\d*$|^J\d+$|^P\d+$/;
+  var SKIP_PN = /^(Heat-Shrink|REV_\d|ATAWWYYXXX|CHARGING|CONTROL|CABLE|DESCRIPTION|ITEM|STANDARD|DRAWING|1501-1000|101-500|501-1500|0-100)$/i;
+
+  function isPNtok(t) {
+    if (!t || t.length < 3 || SKIP_PN.test(t) || CONN_RE.test(t)) return false;
+    // tolerance specs
+    if (/^\d{1,4}-\d{3,4}\s*[±+]/.test(t)) return false;
+    if (/^[A-Za-z][A-Z0-9a-z]{1,}[-\/][A-Z0-9]/.test(t) && t.length > 3) return true;
+    if (/^[A-Z]-\d{3,}/.test(t)) return true;
+    if (/^\d+[A-Z]\d+[-\/]/.test(t)) return true;
+    if (/^\d{4}-\d{3}-\d{4}/.test(t)) return true;
+    if (/^\d{3,5}-\d{2,4}[A-Z]?$/.test(t) && t.length >= 5 && parseInt(t) > 999) return true;
+    return false;
+  }
+
+  // Scan tokens for P/Ns and Qty pairs
+  var allToks = text.split(/\s+/);
+  var foundPNs = [], seenPN = {};
+  var foundQtys = []; // [{qty, unit}]
+  for (var i = 0; i < allToks.length; i++) {
+    var t = allToks[i].replace(/,$/, '');
+    if (isPNtok(t) && !seenPN[t]) { seenPN[t] = 1; foundPNs.push(t); }
+    if (/^[\d\.]+$/.test(t) && i + 1 < allToks.length) {
+      var u = allToks[i+1].toUpperCase();
+      if (/^(PC|MT|EA|M|KG|SET|PCS|LF)$/.test(u)) {
+        foundQtys.push({qty: parseFloat(t), unit: u});
+        i++; // skip unit token
+      }
+    }
+  }
+
+  // Only inject if we found P/Ns but BOM state machine likely failed
+  // (i.e. the text has no "1 PN desc QTY UNIT" pattern)
+  var hasBOMLines = /^\d{1,2}\s+\S{3,}\s+.{5,}\s+\d/.test(text);
+  if (!hasBOMLines && foundPNs.length >= 2 && foundQtys.length >= 2) {
+    var maxLen = Math.min(foundPNs.length, foundQtys.length);
+    var bomSection = '\nITEM P/N DESCRIPTION Qty UN\n';
+    for (var bi = 0; bi < maxLen; bi++) {
+      bomSection += (bi+1) + ' ' + foundPNs[bi] + ' ' + foundPNs[bi] + ' ' + foundQtys[bi].qty + ' ' + foundQtys[bi].unit + '\n';
+    }
+    text += bomSection;
+  }
+
+  return text;
+}
+
 function _hpRunAnalysis(text) {
   var tokens = text.split('\n').map(function(l){
     return l.replace(/\\\//g,'/').replace(/\\#/g,'#').replace(/\\"/g,'"').trim();
@@ -1826,7 +1953,8 @@ function _hpRunAnalysis(text) {
       var itemNum=parseInt(tok);bi++;
       if(bi>=tokens.length)break;
       var pn=tokens[bi].replace(/\\\//g,'/').replace(/\\#/g,'#');
-      if(pn.length<3||_HP_SKIP[pn]||/^[0-9\-\+±]+\s*(MM|mm)$/.test(pn)||pn==='O L'){bi++;continue;}
+      // Use extended _isPN check
+      if(!_isPN(pn)||_HP_SKIP[pn]||pn==='O L'){bi++;continue;}
       bi++;
       var dParts=[],qty=0,unit='';
       while(bi<tokens.length){
@@ -1866,6 +1994,33 @@ function _hpRunAnalysis(text) {
     }
   }
   r.bom = bom.sort(function(a,b){return a.item-b.item;});
+
+  // Strategy 3: if BOM still empty, scan raw text for P/N patterns and zip with qty list
+  if (!r.bom.length) {
+    var allTokens = text.split(/[\s,]+/).filter(Boolean);
+    var foundPNs=[], foundQTYs=[];
+    for(var si=0;si<allTokens.length;si++){
+      var st=allTokens[si];
+      if(_isPN(st)&&!_HP_CONN_RE.test(st)&&!_HP_COLOR_RE.test(st)){foundPNs.push(st);}
+      if(/^[\d\.]+$/.test(st)&&si+1<allTokens.length&&_HP_UNITS[allTokens[si+1].toUpperCase()]){
+        foundQTYs.push({qty:parseFloat(st),unit:allTokens[si+1].toUpperCase()});
+      }
+    }
+    // Deduplicate PNs (keep unique)
+    var seenPN2={};
+    foundPNs=foundPNs.filter(function(p){if(seenPN2[p])return false;seenPN2[p]=1;return true;});
+    // Remove connector-looking PNs
+    foundPNs=foundPNs.filter(function(p){return !_HP_CONN_RE.test(p);});
+    var maxI=Math.min(foundPNs.length,foundQTYs.length);
+    for(var fi=0;fi<maxI;fi++){
+      var fpn=foundPNs[fi];
+      var db2=_PN_DB[fpn];
+      var fdesc=db2?db2.d:fpn;
+      var fcat=db2?db2.c:_hpCat(fdesc,fpn);
+      bom.push({item:fi+1,pn:fpn,desc:fdesc,qty:foundQTYs[fi].qty,unit:foundQTYs[fi].unit,category:fcat});
+    }
+    r.bom=bom;
+  }
 
   // ── WIRES + CONNECTORS — HarnessPro Connection Area ──
   var caStart=-1,caEnd=tokens.length;
@@ -1938,49 +2093,89 @@ function _hpRunAnalysis(text) {
 
 // EngCore fallback wiring strategies (for drawings without Connection Area)
 function _engcoreWiringFallback(text, r){
-  var id=1,page=1,wires=[];
-  // Strategy A: From-To electrical diagram
+  var id=1,wires=[];
   var COLORS_RE='RED|BLK|WHT|GRN|BLU|YEL|ORN|VIO|GRY|SHIELD|BARE|BRN|PNK';
-  var connRe2=/\b([A-Z][A-Z0-9]*\d+\/[A-Z]{1,3}\d*|[A-Z]{2,5}\d+\/[A-Z]{1,3}\d*|BAT\d+\/[A-Z]+\d*|J[A-Z]?\d+|JX\s*\d*|FAN)\b/g;
-  var connSet2={};var cm2;
-  while((cm2=connRe2.exec(text))!==null)connSet2[cm2[1].replace(/\s+/,'')]=(connSet2[cm2[1].replace(/\s+/,'')]||0)+1;
-  var knownConns2=Object.keys(connSet2).filter(function(k){return connSet2[k]>=1&&k.length>=2;});
-  var linesF=text.split(/[\n\r]+/);
-  var lastFrom2='',lastTo2='',connLine2=null,pinA2=1,pinB2=1;
-  linesF.forEach(function(l){
-    l=l.trim();if(!l)return;
-    var refs2=[];knownConns2.forEach(function(c){if(l.indexOf(c)>=0)refs2.push(c);});
-    if(refs2.length>=2){connLine2=refs2;lastFrom2=refs2[0];lastTo2=refs2[1];pinA2=1;pinB2=1;return;}
-    var wm2=l.match(new RegExp('^([A-Z][A-Z0-9_+/\\-]{1,30})\\s+('+COLORS_RE+')$','i'));
-    if(!wm2)wm2=l.match(new RegExp('^('+COLORS_RE+')\\s+([A-Z][A-Z0-9_+/\\-]{1,30})$','i'));
-    if(wm2&&lastFrom2){
-      var sig2=wm2[1],col2=nc(wm2[2]);
-      if(col2==='?'||CNORM[wm2[1].toUpperCase()]){sig2=wm2[2];col2=nc(wm2[1]);}
-      var toConns2=connLine2&&connLine2.length>1?connLine2.slice(1):[lastTo2];
-      toConns2.forEach(function(tc){wires.push({id:id++,fromConn:lastFrom2,fromPin:String(pinA2),toConn:tc,toPin:String(pinB2),signal:sig2,spec:'#22',color:col2,status:'OK',page:page,conflictNote:'',cutLength:r.cableLength||0});});
-      pinA2++;pinB2++;
-    }
-  });
-  // Strategy B: Connection Area regex (if no explicit from-to)
-  if(!wires.length){
-    var caM=text.match(/Connection\s+(?:Area|Points?)?([\s\S]{0,800})/i);
-    if(caM){
-      var ca2=caM[1];
-      var cols2=[],cre2=new RegExp('\\b('+COLORS_RE+')\\b','gi'),cm3;
-      while((cm3=cre2.exec(ca2))!==null)cols2.push(nc(cm3[1]));
-      if(cols2.length>4)cols2=cols2.slice(0,Math.floor(cols2.length/2));
-      var sigs2=[],sm2=ca2.match(/\b(48VDC|48V_RTN|CTRL|PWM|TACHO|GND|VCC|VP\+|VN|[A-Z][A-Z0-9_]{2,20})\b/g)||[];
-      sm2.forEach(function(s){if(!/^(RED|BLU|VIO|WHT|GRN|BLK|YEL|ORN|GRY|BRN|PNK|AWG|PC|MT|REV|DATE)$/i.test(s))sigs2.push(s);});
-      var connM2=ca2.match(/\b([A-Z][A-Z0-9]*(?:\/[A-Z]{1,3}\d*)?)\b\s+\b([A-Z][A-Z0-9]*(?:\/[A-Z]{1,3}\d*)?)\b/);
-      var fConn='J1',tConn='JX';
-      if(connM2){fConn=connM2[1];tConn=connM2[2];}
-      var specM2=ca2.match(/(\d{2})#/);var spec2=specM2?'#'+specM2[1]:'#22';
-      var len2=Math.max(cols2.length,sigs2.length);
-      for(var wi2=0;wi2<len2;wi2++){
-        wires.push({id:id++,fromConn:fConn,fromPin:String(wi2+1),toConn:tConn,toPin:String(wi2+1),signal:sigs2[wi2]||'',spec:spec2,color:cols2[wi2]||'',status:'OK',page:page,conflictNote:'',cutLength:r.cableLength||0});
-      }
-    }
+  var CONN_RE=/\b([A-Z][A-Z0-9]*\d+\/[A-Z]{1,3}\d*|BAT\d+\/[A-Z]+\d*|J[A-Z]?\d+|JX\s*\d*|FAN)\b/g;
+
+  // ── Strategy A: scan for "COLOR #AWG SIGNAL" triplets in flat text ──
+  // This handles the column-separated case: "BLK #22 CHASSIS_GND BLK #22 24V_CHARGE_RTN..."
+  var WIRE_TRIPLET = new RegExp(
+    '\\b('+COLORS_RE+')\\b\\s+#(\\d{2})\\s+([A-Z][A-Z0-9_]{2,30})\\b', 'gi'
+  );
+  // Also "COLOR #AWG" without signal
+  var WIRE_PAIR = new RegExp('\\b('+COLORS_RE+')\\b\\s+#(\\d{2})\\b', 'gi');
+
+  // Get known connectors
+  var connSet={};var cm;
+  var cre=new RegExp(CONN_RE.source,'g');
+  while((cm=cre.exec(text))!==null){ var k=cm[1].replace(/\s+/,''); connSet[k]=(connSet[k]||0)+1; }
+  var knownConns=Object.keys(connSet).sort(function(a,b){return connSet[b]-connSet[a];});
+  var fromC=knownConns[0]||'J1', toC=knownConns[1]||'J2';
+
+  // Scan triplets
+  var tripletMatch, tripleFound=false;
+  var tempW=[];
+  var re3=new RegExp('\\b('+COLORS_RE+')\\b\\s+#(\\d{2})\\s+([A-Z][A-Z0-9_]{2,30})\\b','gi');
+  while((cm=re3.exec(text))!==null){
+    var col=nc(cm[1]),awg='#'+cm[2],sig=cm[3];
+    if(/^(PC|MT|EA|REV|DATE|SIZE|DRAW|ITEM|COMPANY|TITLE)$/.test(sig))continue;
+    tempW.push({color:col,awg:awg,signal:sig});
+    tripleFound=true;
   }
+
+  // If no triplets, try pairs
+  if(!tripleFound){
+    var re2=new RegExp('\\b('+COLORS_RE+')\\b\\s+#(\\d{2})\\b','gi');
+    while((cm=re2.exec(text))!==null){
+      tempW.push({color:nc(cm[1]),awg:'#'+cm[2],signal:''});
+    }
+    // Try to pair with signals from context
+    var sigs=[];
+    var sigRe=/\b(24V_CHARGE_RTN|24V_CHARGE|CHASSIS_GND|EVCSE_POWER_GND|EVCSE_POWER_IN|24V_RTN|24V_OUT|48VDC|48V_RTN|CTRL|TACHO|GND|VCC|VP\+|VN|PWM|TACH|[A-Z][A-Z0-9_]{3,25})\b/g;
+    while((cm=sigRe.exec(text))!==null){
+      var s=cm[1];
+      if(!/^(RED|BLU|VIO|WHT|GRN|BLK|YEL|ORN|GRY|BRN|PNK|AWG|PC|MT|REV|DATE|SIZE|DRAW|ITEM|STANDARD|APPROVED|DRAWN|COMPANY|TITLE|DESCRIPTION|ATAWWYYXXX|RUNING|SERIAL|MANUFACTURER|DIGIT|YEAR|WEEK|CHARGING|CONTROL|CABLE|WEIGHT|NOTE|DETAIL|EVCSE|CHARGER|ALPHA)$/.test(s))
+        sigs.push(s);
+    }
+    for(var i=0;i<tempW.length;i++) tempW[i].signal=sigs[i]||'';
+  }
+
+  // Deduplicate: if same color+signal appears multiple times (from both connectors), halve
+  var seen={};var dedupW=[];
+  tempW.forEach(function(w){
+    var key=w.color+'_'+w.signal;
+    if(!seen[key]){seen[key]=0;} seen[key]++;
+    if(seen[key]<=1) dedupW.push(w);
+  });
+  // If all duplicated, keep all (some drawings have symmetric connections)
+  if(!dedupW.length) dedupW=tempW;
+
+  dedupW.forEach(function(w,i){
+    wires.push({id:id++,fromConn:fromC,fromPin:String(i+1),toConn:toC,toPin:String(i+1),
+      signal:w.signal,spec:w.awg||'#22',color:w.color,pn:'',
+      cutLength:r.cableLength||0,status:'OK',page:1,conflictNote:''});
+  });
+
+  // ── Strategy B: line-by-line from-to scan (keeps working for older formats) ──
+  if(!wires.length){
+    var linesF=text.split(/[\n\r]+/);
+    var lastFrom='',lastTo='',pin=1;
+    linesF.forEach(function(l){
+      l=l.trim();if(!l)return;
+      var refs=[];knownConns.forEach(function(c){if(l.indexOf(c)>=0)refs.push(c);});
+      if(refs.length>=2){lastFrom=refs[0];lastTo=refs[1];pin=1;return;}
+      var wm=l.match(new RegExp('^([A-Z][A-Z0-9_+/\\-]{1,30})\\s+('+COLORS_RE+')$','i'));
+      if(!wm)wm=l.match(new RegExp('^('+COLORS_RE+')\\s+([A-Z][A-Z0-9_+/\\-]{1,30})$','i'));
+      if(wm&&lastFrom){
+        var sig=wm[1],col=nc(wm[2]);
+        if(col==='?'||CNORM[wm[1].toUpperCase()]){sig=wm[2];col=nc(wm[1]);}
+        wires.push({id:id++,fromConn:lastFrom,fromPin:String(pin),toConn:lastTo,toPin:String(pin),
+          signal:sig,spec:'#22',color:col,cutLength:r.cableLength||0,status:'OK',page:1,conflictNote:''});
+        pin++;
+      }
+    });
+  }
+
   return wires;
 }
 
@@ -2009,11 +2204,13 @@ function detectConflicts(bom, wires){
 }
 
 function processText(text){
-  setFS(65,'Parser HarnessPro v4: מנתח...');
+  setFS(65,'Parser: מנתח טקסט...');
   CUR.rawText = text;
+  // Pre-process flat OCR/fallback text
+  var cleanText = _preprocessFlatText(text);
   setTimeout(function(){
     try {
-      var r = _hpRunAnalysis(text);
+      var r = _hpRunAnalysis(cleanText);
       CUR.project  = { drawingNo:r.drawingNo,rev:r.rev,title:r.title,company:r.company,date:r.date,drawn:r.drawn,approved:r.approved,pn:r.pn,cableLength:r.cableLength,tolerance:r.tolerance };
       CUR.bom      = r.bom;
       CUR.wiring   = r.wiring;
